@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dock-dashboard-dev",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-24",
+  "workers_dev": true,
+  "assets": {
+    "directory": "../../dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+  },
+  "r2_buckets": [
+    {
+      "binding": "AVATARS",
+      "bucket_name": "dock-dashboard-avatars",
+    },
+  ],
+  "vars": {
+    "FIREBASE_PROJECT_ID": "panel-ola",
+    "FIREBASE_API_KEY": "AIzaSyD0SeV0GDoYLRKXBy70Bd0Vi-KmO51kqJw",
+    "ALLOWED_ORIGINS": "http://localhost:5173,http://localhost:8787",
+  },
+}

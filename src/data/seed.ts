@@ -5,6 +5,8 @@ import type {
   ShrinkageEvent,
 } from "../domain/reception";
 import type { Expense, WasteRecord } from "../domain/operations";
+import type { Member } from "../domain/members";
+import type { Payslip, TimeEntry } from "../domain/workday";
 
 export interface SeedData {
   notes: DeliveryNote[];
@@ -12,6 +14,9 @@ export interface SeedData {
   machines: Machine[];
   wasteRecords: WasteRecord[];
   expenses: Expense[];
+  members: Member[];
+  timeEntries: TimeEntry[];
+  payslips: Payslip[];
 }
 
 const L = (
@@ -422,7 +427,143 @@ export function buildSeed(today: string): SeedData {
     },
   ];
 
-  return { notes, shrinkageEvents, machines, wasteRecords, expenses };
+  const members: Member[] = [
+    {
+      id: "MI-01",
+      name: "K. Ramírez",
+      email: "k.ramirez@panel-ola.es",
+      role: "responsable",
+      department: "recepcion",
+      status: "activo",
+    },
+    {
+      id: "MI-02",
+      name: "Sergio Álvarez",
+      email: "sergio@panel-ola.es",
+      role: "admin",
+      department: "administracion",
+      status: "activo",
+    },
+    {
+      id: "MI-03",
+      name: "Lucía Ferrer",
+      email: "l.ferrer@panel-ola.es",
+      role: "operario",
+      department: "almacen",
+      status: "activo",
+    },
+    {
+      id: "MI-04",
+      name: "Marco Sanz",
+      email: "m.sanz@panel-ola.es",
+      role: "operario",
+      department: "mantenimiento",
+      status: "inactivo",
+    },
+  ];
+
+  const timeEntries: TimeEntry[] = [
+    {
+      id: "FIC-01",
+      memberId: "MI-02",
+      date: today,
+      shift: "manana",
+      clockIn: `${today}T06:02:00`,
+      clockOut: `${today}T14:01:00`,
+    },
+    {
+      id: "FIC-02",
+      memberId: "MI-02",
+      date: yesterday,
+      shift: "tarde",
+      clockIn: `${yesterday}T14:00:00`,
+      clockOut: `${yesterday}T22:05:00`,
+    },
+    {
+      id: "FIC-03",
+      memberId: "MI-01",
+      date: today,
+      shift: "manana",
+      clockIn: `${today}T05:58:00`,
+      clockOut: `${today}T14:03:00`,
+    },
+    {
+      id: "FIC-04",
+      memberId: "MI-03",
+      date: yesterday,
+      shift: "noche",
+      clockIn: `${yesterday}T22:00:00`,
+      clockOut: `${today}T06:02:00`,
+    },
+  ];
+
+  const payslips: Payslip[] = [
+    {
+      id: "NOM-01",
+      memberId: "MI-02",
+      period: "2026-09",
+      grossEur: 2450,
+      netEur: 1920.4,
+      status: "pagada",
+      issuedAt: "2026-09-30",
+    },
+    {
+      id: "NOM-02",
+      memberId: "MI-02",
+      period: "2026-08",
+      grossEur: 2380,
+      netEur: 1868.2,
+      status: "pagada",
+      issuedAt: "2026-08-31",
+    },
+    {
+      id: "NOM-03",
+      memberId: "MI-02",
+      period: "2026-07",
+      grossEur: 2380,
+      netEur: 1868.2,
+      status: "pagada",
+      issuedAt: "2026-07-31",
+    },
+    {
+      id: "NOM-04",
+      memberId: "MI-01",
+      period: "2026-09",
+      grossEur: 2210,
+      netEur: 1745.9,
+      status: "pagada",
+      issuedAt: "2026-09-30",
+    },
+    {
+      id: "NOM-05",
+      memberId: "MI-03",
+      period: "2026-09",
+      grossEur: 1890,
+      netEur: 1512.6,
+      status: "pagada",
+      issuedAt: "2026-09-30",
+    },
+    {
+      id: "NOM-06",
+      memberId: "MI-04",
+      period: "2026-09",
+      grossEur: 1840,
+      netEur: 1476.3,
+      status: "pendiente",
+      issuedAt: "2026-09-30",
+    },
+  ];
+
+  return {
+    notes,
+    shrinkageEvents,
+    machines,
+    wasteRecords,
+    expenses,
+    members,
+    timeEntries,
+    payslips,
+  };
 }
 
 function shiftDate(isoDate: string, days: number): string {

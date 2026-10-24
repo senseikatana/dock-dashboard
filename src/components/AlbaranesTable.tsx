@@ -15,10 +15,12 @@ function locationOf(note: DeliveryNote): string {
 export function AlbaranesTable({
   notes,
   onValidate,
+  onDelete,
   justStamped,
 }: {
   notes: DeliveryNote[];
   onValidate?: (noteId: string) => void;
+  onDelete?: (noteId: string) => void;
   justStamped?: string[];
 }) {
   return (
@@ -32,7 +34,7 @@ export function AlbaranesTable({
             <th className="col-num">Líneas</th>
             <th>Ubicación</th>
             <th>Estado</th>
-            {onValidate ? <th aria-label="Acciones" /> : null}
+            {onValidate || onDelete ? <th aria-label="Acciones" /> : null}
           </tr>
         </thead>
         <tbody>
@@ -73,17 +75,28 @@ export function AlbaranesTable({
                     </span>
                   )}
                 </td>
-                {onValidate ? (
+                {onValidate || onDelete ? (
                   <td>
-                    {note.status === "pendiente" ? (
-                      <button
-                        type="button"
-                        className="btn btn-small"
-                        onClick={() => onValidate(note.id)}
-                      >
-                        Validar
-                      </button>
-                    ) : null}
+                    <div className="row-actions">
+                      {onValidate && note.status === "pendiente" ? (
+                        <button
+                          type="button"
+                          className="btn btn-small"
+                          onClick={() => onValidate(note.id)}
+                        >
+                          Validar
+                        </button>
+                      ) : null}
+                      {onDelete ? (
+                        <button
+                          type="button"
+                          className="btn btn-small btn-danger"
+                          onClick={() => onDelete(note.id)}
+                        >
+                          Eliminar
+                        </button>
+                      ) : null}
+                    </div>
                   </td>
                 ) : null}
               </tr>

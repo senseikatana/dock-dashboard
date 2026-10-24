@@ -1,5 +1,6 @@
 import { formatCount, formatEur, formatPct } from "../domain/format";
 import type { ShiftSummary } from "../domain/reception";
+import { MAX_DOCKS } from "../domain/reception";
 
 export function KpiStrip({ summary }: { summary: ShiftSummary }) {
   const inactive = summary.machinery.total - summary.machinery.operational;
@@ -11,7 +12,7 @@ export function KpiStrip({ summary }: { summary: ShiftSummary }) {
         <div className="kpi-value num">
           {formatCount(summary.receptionsToday)}
         </div>
-        <div className="kpi-note">Muelles 1–7</div>
+        <div className="kpi-note">{`Muelles 1–${MAX_DOCKS}`}</div>
       </section>
       <section className="kpi">
         <div className="kpi-label">Conformidad</div>

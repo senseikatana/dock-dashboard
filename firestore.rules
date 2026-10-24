@@ -1,9 +1,73 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Desarrollo: lectura/escritura abierta. Restringir en producción.
-    match /{document=**} {
-      allow read, write: if true;
+    function role() {
+      return request.auth.token.role;
+    }
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function memberUid(memberId) {
+      return get(/databases/$(database)/documents/members/$(memberId)).data.uid;
+    }
+
+    // Miembros: cualquier autenticado puede leer. Admin edita todo;
+    // cada usuario puede editar solo su nombre, avatar y email.
+    match /members/{memberId} {
+      allow read: if signedIn();
+      allow create, delete: if role() == 'admin';
+      allow update: if role() == 'admin'
+        || (signedIn()
+          && resource.data.uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['name', 'avatarUrl', 'email']));
+    }
+
+    // Recepción e incidencias: los tres roles operan.
+    match /albaranes/{noteId} {
+      allow read: if signedIn();
+      allow write: if role() in ['admin', 'responsable', 'operario'];
+    }
+
+    match /shrinkageEvents/{eventId} {
+      allow read: if signedIn();
+      allow write: if role() in ['admin', 'responsable', 'operario'];
+    }
+
+    // Maquinaria, residuos y gastos: solo admin y responsable.
+    match /machines/{machineId} {
+      allow read: if signedIn();
+      allow write: if role() in ['admin', 'responsable'];
+    }
+
+    match /wasteRecords/{recordId} {
+      allow read: if signedIn();
+      allow write: if role() in ['admin', 'responsable'];
+    }
+
+    match /expenses/{expenseId} {
+      allow read: if signedIn();
+      allow write: if role() in ['admin', 'responsable'];
+    }
+
+    // Fichajes: cada usuario ve y gestiona los suyos; admin ve todos.
+    match /timeEntries/{entryId} {
+      allow read: if signedIn()
+        && (role() == 'admin' || memberUid(resource.data.memberId) == request.auth.uid);
+      allow create: if signedIn()
+        && (role() == 'admin'
+          || memberUid(request.resource.data.memberId) == request.auth.uid);
+      allow update, delete: if signedIn()
+        && (role() == 'admin' || memberUid(resource.data.memberId) == request.auth.uid);
+    }
+
+    // Nóminas: cada usuario ve las suyas; solo admin escribe.
+    match /payslips/{payslipId} {
+      allow read: if signedIn()
+        && (role() == 'admin' || memberUid(resource.data.memberId) == request.auth.uid);
+      allow write: if role() == 'admin';
     }
   }
 }

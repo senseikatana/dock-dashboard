@@ -16,6 +16,8 @@ export interface ReceptionLine {
 
 export type NoteStatus = "pendiente" | "validado" | "incidencia";
 
+export const MAX_DOCKS = 40;
+
 export interface DeliveryNote {
   id: string;
   supplier: string;

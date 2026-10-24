@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dock-dashboard",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-24",
+  "workers_dev": true,
+  "assets": {
+    "directory": "../../dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+  },
+  "routes": [
+    {
+      "pattern": "samuraicoder.dev/apps/dock-dashboard/*",
+      "zone_name": "samuraicoder.dev",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "AVATARS",
+      "bucket_name": "dock-dashboard-avatars",
+    },
+  ],
+  "vars": {
+    "FIREBASE_PROJECT_ID": "panel-ola",
+    "FIREBASE_API_KEY": "AIzaSyD0SeV0GDoYLRKXBy70Bd0Vi-KmO51kqJw",
+    "ALLOWED_ORIGINS": "https://samuraicoder.dev,https://dock-dashboard-6wu.pages.dev,http://localhost:5173",
+  },
+}

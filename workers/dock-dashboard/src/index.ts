@@ -1,0 +1,439 @@
+import { importPKCS8, SignJWT } from "jose";
+
+interface Env {
+  ASSETS: Fetcher;
+  AVATARS: R2Bucket;
+  FIREBASE_PROJECT_ID: string;
+  FIREBASE_API_KEY: string;
+  ALLOWED_ORIGINS: string;
+  FIREBASE_SERVICE_ACCOUNT: string;
+}
+
+interface ServiceAccount {
+  client_email: string;
+  private_key: string;
+}
+
+interface ProvisionBody {
+  memberId: string;
+  email: string;
+  name: string;
+  role: "admin" | "responsable" | "operario";
+}
+
+interface MemberRecord {
+  email: string;
+  uid: string | null;
+}
+
+const PREFIX = "/apps/dock-dashboard";
+const API_MEMBERS = `${PREFIX}/api/members`;
+const API_AVATARS = `${PREFIX}/api/avatars`;
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+
+let tokenCache: { token: string; expiresAt: number } | null = null;
+
+function json(data: unknown, status = 200, extraHeaders: HeadersInit = {}) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      ...extraHeaders,
+    },
+  });
+}
+
+function corsHeaders(request: Request, env: Env): HeadersInit {
+  const origin = request.headers.get("Origin") ?? "";
+  const allowed = env.ALLOWED_ORIGINS.split(",").map((item) => item.trim());
+  return {
+    "Access-Control-Allow-Origin": allowed.includes(origin)
+      ? origin
+      : allowed[0],
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Authorization, Content-Type",
+    Vary: "Origin",
+  };
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  const part = token.split(".")[1];
+  if (!part) throw new Error("Invalid token");
+  const base64 = part.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+  const binary = atob(padded);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+async function serviceAccountToken(env: Env): Promise<string> {
+  if (tokenCache && tokenCache.expiresAt > Date.now() + 60_000) {
+    return tokenCache.token;
+  }
+
+  const account = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT) as ServiceAccount;
+  const key = await importPKCS8(account.private_key, "RS256");
+  const assertion = await new SignJWT({
+    scope:
+      "https://www.googleapis.com/auth/identitytoolkit https://www.googleapis.com/auth/datastore",
+  })
+    .setProtectedHeader({ alg: "RS256", typ: "JWT" })
+    .setIssuer(account.client_email)
+    .setAudience("https://oauth2.googleapis.com/token")
+    .setIssuedAt()
+    .setExpirationTime("1h")
+    .sign(key);
+
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion,
+    }),
+  });
+
+  const data = (await response.json()) as {
+    access_token?: string;
+    expires_in?: number;
+    error?: string;
+  };
+
+  if (!response.ok || !data.access_token) {
+    throw new Error(`Service account token failed: ${data.error ?? "unknown"}`);
+  }
+
+  tokenCache = {
+    token: data.access_token,
+    expiresAt: Date.now() + (data.expires_in ?? 3600) * 1000,
+  };
+  return data.access_token;
+}
+
+async function verifyCaller(
+  request: Request,
+  env: Env,
+): Promise<{ uid: string; email: string; role: string } | null> {
+  const header = request.headers.get("Authorization") ?? "";
+  const idToken = header.startsWith("Bearer ") ? header.slice(7) : "";
+  if (!idToken) return null;
+
+  const response = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${env.FIREBASE_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    },
+  );
+  const data = (await response.json()) as {
+    users?: Array<{ localId: string; email?: string }>;
+  };
+  const user = data.users?.[0];
+  if (!response.ok || !user) return null;
+
+  const payload = decodeJwtPayload(idToken);
+  return {
+    uid: user.localId,
+    email: user.email ?? "",
+    role: typeof payload.role === "string" ? payload.role : "",
+  };
+}
+
+async function getMember(
+  env: Env,
+  accessToken: string,
+  memberId: string,
+): Promise<MemberRecord | null> {
+  const response = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/members/${encodeURIComponent(memberId)}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!response.ok) return null;
+  const data = (await response.json()) as {
+    fields?: {
+      email?: { stringValue?: string };
+      uid?: { stringValue?: string };
+    };
+  };
+  const email = data.fields?.email?.stringValue;
+  if (!email) return null;
+  return { email, uid: data.fields?.uid?.stringValue ?? null };
+}
+
+async function patchMember(
+  env: Env,
+  accessToken: string,
+  memberId: string,
+  fields: Record<string, string>,
+): Promise<void> {
+  const params = new URLSearchParams();
+  for (const field of Object.keys(fields)) {
+    params.append("updateMask.fieldPaths", field);
+  }
+  const body = {
+    fields: Object.fromEntries(
+      Object.entries(fields).map(([key, value]) => [
+        key,
+        { stringValue: value },
+      ]),
+    ),
+  };
+  const response = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/members/${encodeURIComponent(memberId)}?${params}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    },
+  );
+  if (!response.ok) {
+    throw new Error("No se pudo actualizar el miembro en Firestore");
+  }
+}
+
+async function createAuthUser(
+  env: Env,
+  accessToken: string,
+  body: ProvisionBody,
+  password: string,
+): Promise<string> {
+  const response = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/accounts`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: body.email.toLowerCase(),
+        password,
+        displayName: body.name,
+        emailVerified: false,
+      }),
+    },
+  );
+  const data = (await response.json()) as {
+    localId?: string;
+    error?: { message?: string };
+  };
+  if (!response.ok || !data.localId) {
+    const code = data.error?.message ?? "UNKNOWN";
+    if (code.includes("EMAIL_EXISTS")) {
+      throw new Error("EMAIL_EXISTS");
+    }
+    throw new Error(`No se pudo crear la cuenta: ${code}`);
+  }
+  return data.localId;
+}
+
+async function setRoleClaim(
+  env: Env,
+  accessToken: string,
+  uid: string,
+  role: string,
+): Promise<void> {
+  const response = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/accounts:update`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        localId: uid,
+        customAttributes: JSON.stringify({ role }),
+      }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error("No se pudo asignar el rol a la cuenta");
+  }
+}
+
+function generatePassword(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  const random = btoa(String.fromCharCode(...bytes))
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .slice(0, 12);
+  return `Pola-${random}9!`;
+}
+
+async function handleProvision(request: Request, env: Env): Promise<Response> {
+  const cors = corsHeaders(request, env);
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: cors });
+  }
+  if (request.method !== "POST") {
+    return json({ error: "Método no permitido" }, 405, cors);
+  }
+
+  try {
+    const caller = await verifyCaller(request, env);
+    if (!caller) {
+      return json({ error: "Sesión inválida" }, 401, cors);
+    }
+    if (caller.role !== "admin") {
+      return json({ error: "Solo un admin puede crear accesos" }, 403, cors);
+    }
+
+    const body = (await request.json()) as ProvisionBody;
+    if (
+      !body.memberId ||
+      !body.email ||
+      !["admin", "responsable", "operario"].includes(body.role)
+    ) {
+      return json({ error: "Datos incompletos" }, 400, cors);
+    }
+
+    const accessToken = await serviceAccountToken(env);
+    const member = await getMember(env, accessToken, body.memberId);
+    if (!member) {
+      return json({ error: "Miembro no encontrado" }, 404, cors);
+    }
+    if (member.email.toLowerCase() !== body.email.toLowerCase()) {
+      return json({ error: "El email no coincide con el miembro" }, 409, cors);
+    }
+
+    const password = generatePassword();
+    const uid = await createAuthUser(env, accessToken, body, password);
+    await setRoleClaim(env, accessToken, uid, body.role);
+    await patchMember(env, accessToken, body.memberId, { uid });
+
+    return json({ uid, email: body.email.toLowerCase(), password }, 201, cors);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Error interno";
+    if (message === "EMAIL_EXISTS") {
+      return json({ error: "Ya existe una cuenta con ese email" }, 409, cors);
+    }
+    return json({ error: message }, 500, cors);
+  }
+}
+
+async function handleAvatarUpload(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const cors = corsHeaders(request, env);
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: cors });
+  }
+  if (request.method !== "POST") {
+    return json({ error: "Método no permitido" }, 405, cors);
+  }
+
+  try {
+    const caller = await verifyCaller(request, env);
+    if (!caller) {
+      return json({ error: "Sesión inválida" }, 401, cors);
+    }
+
+    const form = await request.formData();
+    const memberId = String(form.get("memberId") ?? "");
+    const file = form.get("file");
+    if (!memberId || !(file instanceof File)) {
+      return json({ error: "Faltan memberId o file" }, 400, cors);
+    }
+    if (!file.type.startsWith("image/")) {
+      return json({ error: "El avatar debe ser una imagen" }, 415, cors);
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      return json({ error: "El avatar supera los 5 MB" }, 413, cors);
+    }
+
+    if (caller.role === "operario") {
+      const accessToken = await serviceAccountToken(env);
+      const member = await getMember(env, accessToken, memberId);
+      if (!member || member.uid !== caller.uid) {
+        return json(
+          { error: "Solo podés cambiar tu propio avatar" },
+          403,
+          cors,
+        );
+      }
+    }
+
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+    const key = `avatars/${memberId}/${crypto.randomUUID()}-${safeName}`;
+    await env.AVATARS.put(key, file.stream(), {
+      httpMetadata: { contentType: file.type },
+      customMetadata: { memberId },
+    });
+
+    return json(
+      {
+        url: new URL(
+          `${API_AVATARS}/${encodeURIComponent(key)}`,
+          request.url,
+        ).toString(),
+      },
+      201,
+      cors,
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Error interno";
+    return json({ error: message }, 500, cors);
+  }
+}
+
+async function handleAvatarRead(
+  request: Request,
+  env: Env,
+  key: string,
+): Promise<Response> {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+  const object = await env.AVATARS.get(decodeURIComponent(key));
+  if (!object) {
+    return new Response("Not found", { status: 404 });
+  }
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set("etag", object.httpEtag);
+  headers.set("Cache-Control", "public, max-age=31536000, immutable");
+  return new Response(request.method === "HEAD" ? null : object.body, {
+    headers,
+  });
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+
+    if (url.pathname === API_MEMBERS) {
+      return handleProvision(request, env);
+    }
+
+    if (url.pathname === API_AVATARS) {
+      return handleAvatarUpload(request, env);
+    }
+
+    if (url.pathname.startsWith(`${API_AVATARS}/`)) {
+      return handleAvatarRead(
+        request,
+        env,
+        url.pathname.slice(API_AVATARS.length + 1),
+      );
+    }
+
+    if (url.pathname === PREFIX) {
+      return Response.redirect(`${url.origin}${PREFIX}/`, 301);
+    }
+
+    if (!url.pathname.startsWith(`${PREFIX}/`)) {
+      return new Response("Not found", { status: 404 });
+    }
+
+    const assetPath = url.pathname.slice(PREFIX.length) || "/";
+    const assetUrl = new URL(`${assetPath}${url.search}`, url.origin);
+    return env.ASSETS.fetch(new Request(assetUrl.toString(), request));
+  },
+};

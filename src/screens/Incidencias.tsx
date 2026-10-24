@@ -1,9 +1,17 @@
-import type { WarehouseRepository } from "../data/repository";
-import { useShift } from "../data/useShift";
-import { checkNote } from "../domain/reception";
+import { useEffect, useState } from "react";
+
+import type { ShiftData, WarehouseRepository } from "../data/repository";
 import { formatEur } from "../domain/format";
+import type { ShrinkageEvent } from "../domain/reception";
+import { checkNote } from "../domain/reception";
 
 const ORIGIN_COPY = { known: "Conocida", unknown: "Desconocida" } as const;
+
+const KIND_COPY: Record<ShrinkageEvent["kind"], string> = {
+  rotura: "Rotura",
+  faltante: "Faltante",
+  desconocida: "Desconocida",
+};
 
 export function Incidencias({
   repository,
@@ -12,7 +20,22 @@ export function Incidencias({
   repository: WarehouseRepository;
   today: string;
 }) {
-  const shift = useShift(repository, today);
+  const [shift, setShift] = useState<ShiftData | null>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  async function refresh() {
+    setShift(await repository.loadShift(today));
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    repository.loadShift(today).then((data) => {
+      if (!cancelled) setShift(data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [repository, today]);
 
   if (!shift) {
     return <div className="empty-slot">Cargando el turno…</div>;
@@ -35,6 +58,17 @@ export function Incidencias({
     }),
   );
 
+  async function addEvent(event: ShrinkageEvent) {
+    await repository.addShrinkageEvent(event);
+    await refresh();
+    setShowForm(false);
+  }
+
+  async function removeEvent(eventId: string) {
+    await repository.deleteShrinkageEvent(eventId);
+    await refresh();
+  }
+
   return (
     <>
       <div className="title-row">
@@ -44,7 +78,18 @@ export function Incidencias({
             Diferencias de recepción y pérdida registrada del mes.
           </p>
         </div>
+        <div className="actions">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => setShowForm((open) => !open)}
+          >
+            {showForm ? "Cerrar formulario" : "Registrar merma"}
+          </button>
+        </div>
       </div>
+
+      {showForm ? <ShrinkageForm onSubmit={addEvent} /> : null}
 
       <section className="rail-block">
         <h2 className="panel-title">Líneas con diferencia</h2>
@@ -82,37 +127,116 @@ export function Incidencias({
 
       <section className="rail-block">
         <h2 className="panel-title">Mermas del mes</h2>
-        <table className="albaranes">
-          <thead>
-            <tr>
-              <th>Registro</th>
-              <th>Albarán</th>
-              <th>Origen</th>
-              <th>Material</th>
-              <th className="col-num">Importe</th>
-            </tr>
-          </thead>
-          <tbody>
-            {shift.shrinkageEvents.map((event) => (
-              <tr key={event.id}>
-                <td className="code">{event.id}</td>
-                <td className="code">{event.albaranId}</td>
-                <td>
-                  <span
-                    className={
-                      event.known ? "pill pill-ok" : "pill pill-incidencia"
-                    }
-                  >
-                    {event.known ? ORIGIN_COPY.known : ORIGIN_COPY.unknown}
-                  </span>
-                </td>
-                <td className="col-identity">{event.material}</td>
-                <td className="col-num">{formatEur(event.costEur)}</td>
+        {shift.shrinkageEvents.length === 0 ? (
+          <div className="empty-slot">Sin mermas registradas.</div>
+        ) : (
+          <table className="albaranes">
+            <thead>
+              <tr>
+                <th>Registro</th>
+                <th>Albarán</th>
+                <th>Origen</th>
+                <th>Material</th>
+                <th className="col-num">Importe</th>
+                <th>Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {shift.shrinkageEvents.map((event) => (
+                <tr key={event.id}>
+                  <td className="code">{event.id}</td>
+                  <td className="code">{event.albaranId}</td>
+                  <td>
+                    <span
+                      className={
+                        event.known ? "pill pill-ok" : "pill pill-incidencia"
+                      }
+                    >
+                      {event.known ? ORIGIN_COPY.known : ORIGIN_COPY.unknown}
+                    </span>
+                  </td>
+                  <td className="col-identity">{event.material}</td>
+                  <td className="col-num">{formatEur(event.costEur)}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className="btn btn-small btn-danger"
+                      onClick={() => removeEvent(event.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </section>
     </>
+  );
+}
+
+function ShrinkageForm({
+  onSubmit,
+}: {
+  onSubmit: (event: ShrinkageEvent) => void;
+}) {
+  return (
+    <form
+      className="reception-form"
+      onSubmit={(formEvent) => {
+        formEvent.preventDefault();
+        const form = new FormData(formEvent.currentTarget);
+        onSubmit({
+          id: String(form.get("id")),
+          albaranId: String(form.get("albaranId")),
+          kind: String(form.get("kind")) as ShrinkageEvent["kind"],
+          material: String(form.get("material")),
+          costEur: Number(form.get("costEur")),
+          known: form.get("known") === "known",
+        });
+      }}
+    >
+      <div className="form-grid">
+        <label>
+          Registro
+          <input name="id" required placeholder="MER-07" />
+        </label>
+        <label>
+          Albarán
+          <input name="albaranId" required placeholder="ALB-2026-0417" />
+        </label>
+        <label>
+          Tipo
+          <select name="kind" defaultValue="rotura">
+            {Object.entries(KIND_COPY).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Origen
+          <select name="known" defaultValue="known">
+            <option value="known">Conocida</option>
+            <option value="unknown">Desconocida</option>
+          </select>
+        </label>
+        <label>
+          Material
+          <input name="material" required placeholder="Cerámica y pavimento" />
+        </label>
+        <label>
+          Importe (€)
+          <input name="costEur" type="number" min={0} step="0.01" required />
+        </label>
+      </div>
+      <div className="form-actions">
+        <button type="submit" className="btn btn-primary">
+          Guardar merma
+        </button>
+      </div>
+    </form>
   );
 }

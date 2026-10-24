@@ -1,10 +1,12 @@
 /*
- * Panel OLA — tokens (direction: "Materia de obra").
+ * Dock Dashboard — tokens (direction: "Materia de obra").
  * One cement-paper frame holding one white work sheet; warm ink;
  * signal orange as the only chroma; figures set in Barlow Condensed.
  * Downstream styles reference tokens only.
  */
 :root {
+  color-scheme: light;
+
   /* surfaces */
   --ground: #e8e4dc; /* cement-paper frame */
   --ground-deep: #ddd8ce; /* one step darker: shift card, active nav, tabs */
@@ -56,4 +58,35 @@
   --pad: 24px;
   --gap: 24px;
   --row-height: 44px; /* the ceramic module pitch */
+}
+
+/* Dark theme: same warm ink/orange identity, inverted surfaces. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ground: #1b1714;
+  --ground-deep: #26201c;
+  --surface: #211c18;
+  --raised: #2a231f;
+  --border: #3a322b;
+  --rule: #322a24;
+  --rule-course: #3f352e;
+  --control: #5a4c42;
+
+  --text: #f3ece4;
+  --muted: #b8a99c;
+  --muted-on-ground: #c9bbae;
+
+  --accent: #ef7a45;
+  --accent-ink: #f2a077;
+  --accent-strong: #d95d2b;
+  --primary-fill: #f3ece4;
+  --primary-ink: #1b1714;
+
+  --positive-ink: #c8dfc0;
+  --positive-bg: #2c3a27;
+  --warning-ink: #f0d9a0;
+  --warning-bg: #3a3220;
+  --negative-ink: #f2b8a6;
+  --negative-bg: #43251d;
 }

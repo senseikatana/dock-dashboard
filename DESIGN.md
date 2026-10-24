@@ -1,5 +1,5 @@
 ---
-name: Panel OLA
+name: Dock Dashboard
 description: Warehouse goods-reception panel laid out as construction material — a cement-paper frame holding one white work sheet, warm ink, one signal orange, figures in a condensed face.
 colors:
   ground: "#e8e4dc"
@@ -144,7 +144,7 @@ components:
     padding: "14px 16px"
 ---
 
-# Design System: Panel OLA
+# Design System: Dock Dashboard
 
 ## Overview
 

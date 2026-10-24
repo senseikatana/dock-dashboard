@@ -1,5 +1,5 @@
 {
-  "name": "panel-ola",
+  "name": "dock-dashboard",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -7,19 +7,27 @@
     "dev": "vite",
     "test": "vitest run",
     "build": "tsc -b && vite build",
+    "build:cf": "tsc -b && VITE_BASE_PATH=/apps/dock-dashboard/ vite build",
+    "build:pages": "tsc -b && VITE_AUTH_API_URL=https://dock-dashboard.senseikatanacom.workers.dev/apps/dock-dashboard/api VITE_AVATAR_API_URL=https://dock-dashboard.senseikatanacom.workers.dev/apps/dock-dashboard/api vite build --outDir dist-pages && printf '/* /index.html 200\\n' > dist-pages/_redirects",
+    "deploy:cf": "bun run build:cf && wrangler deploy --config workers/dock-dashboard/wrangler.jsonc",
+    "deploy:pages": "bun run build:pages && wrangler pages deploy dist-pages --project-name dock-dashboard --branch main --commit-dirty=true",
     "lint": "oxlint",
     "preview": "vite preview",
     "prepare": "husky",
-    "typecheck": "bun check"
+    "typecheck": "bun check",
+    "seed": "bun scripts/seed-firestore.mjs",
+    "purge": "bun scripts/purge-firestore.mjs",
+    "auth:users": "bun scripts/create-auth-users.mjs",
+    "auth:sync-roles": "bun scripts/set-role-claims.mjs"
   },
   "dependencies": {
     "@fontsource/archivo": "^5.3.0",
     "@fontsource/barlow-condensed": "^5.3.0",
-    "@insforge/sdk": "^1.5.2",
     "firebase": "^13.1.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-router-dom": "^7.18.4"
+    "react-router-dom": "^7.18.4",
+    "sweetalert2": "^11.26.25"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

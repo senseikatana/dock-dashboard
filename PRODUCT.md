@@ -27,15 +27,15 @@ Warehouse office during rotating shifts. Artifacts of the job: delivery notes fr
 ## Capabilities and Constraints
 
 - Modules: recepción de mercancía (albaranes), incidencias y mermas, maquinaria, residuos, gastos generales, cuadro de mando.
-- Backend MUST be InsForge (`@insforge/sdk`): the user explicitly rejected a backend-less demo. Stack on the scaffold: Vite + React + TypeScript + CSS custom-property tokens + Vitest + Playwright.
+- Backend MUST be Firebase (`firebase` SDK + Firestore): the user explicitly rejected a backend-less demo. Stack on the scaffold: Vite + React + TypeScript + CSS custom-property tokens + Vitest + Playwright.
 - All data is fictitious but realistic (building-materials trade vocabulary, plausible suppliers and carriers). No data from OBRAMAT or any real company. Totals must add up from the rows.
 - UI language: Spanish (es-ES) — inferred from the job context, to confirm.
 - Test-driven development is a working constraint: tests written first and watched fail (Vitest).
-- Open decisions: authentication model (InsForge auth or single demo user), deployment target, whether the Google Sheets companion template ships in the same effort.
+- Open decisions: deployment target, whether the Google Sheets companion template ships in the same effort. Authentication is decided: Firebase Auth (email/password) with role-based access (admin / responsable / operario).
 
 ## Brand Commitments
 
-Product name: **Panel OLA**. Generic identity, deliberately not OBRAMAT's: no reproduction of third-party corporate identity, name or logo anywhere in the product.
+Product name: **Dock Dashboard**. Generic identity, deliberately not OBRAMAT's: no reproduction of third-party corporate identity, name or logo anywhere in the product.
 
 ## Evidence on Hand
 

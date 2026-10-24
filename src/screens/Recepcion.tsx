@@ -5,6 +5,7 @@ import { KpiStrip } from "../components/KpiStrip";
 import { MermaRail, type OpenDifference } from "../components/MermaRail";
 import type { ShiftData, WarehouseRepository } from "../data/repository";
 import type { DeliveryNote, NoteStatus } from "../domain/reception";
+import { MAX_DOCKS } from "../domain/reception";
 import {
   checkNote,
   shrinkageByMaterial,
@@ -118,13 +119,18 @@ export function Recepcion({
     setShowForm(false);
   }
 
+  async function remove(noteId: string) {
+    await repository.deleteNote(noteId);
+    setShift(await repository.loadShift(today));
+  }
+
   return (
     <>
       <div className="title-row">
         <div>
           <h1>Recepción de mercancía</h1>
           <p className="sub">
-            {`Turno mañana · Muelles 1–7 · ${longDate(today)}`}
+            {`Turno mañana · Muelles 1–${MAX_DOCKS} · ${longDate(today)}`}
           </p>
         </div>
         <div className="actions">
@@ -173,10 +179,11 @@ export function Recepcion({
               <AlbaranesTable
                 notes={visible}
                 onValidate={validate}
+                onDelete={remove}
                 justStamped={justStamped}
               />
               <div className="table-foot">
-                <span>{`${visible.length} de ${counts.todos} albaranes · Muelles 1–7`}</span>
+                <span>{`${visible.length} de ${counts.todos} albaranes · Muelles 1–${MAX_DOCKS}`}</span>
                 <span className="num">Actualizado 13:52</span>
               </div>
             </>
@@ -257,7 +264,7 @@ function ReceptionForm({
             name="dock"
             type="number"
             min={1}
-            max={7}
+            max={MAX_DOCKS}
             required
             defaultValue={1}
           />

@@ -99,4 +99,34 @@ describe("MemoryWarehouseRepository", () => {
       shift.notes.find((entry) => entry.id === "ALB-2026-0417")?.supplier,
     ).toBe("Aislamientos Vigo");
   });
+
+  it("should create, update and delete a company member", async () => {
+    // Arrange
+    const repository = new MemoryWarehouseRepository(buildSeed(TODAY));
+    const member = {
+      id: "MI-99",
+      name: "Nuevo Miembro",
+      email: "nuevo@panel-ola.es",
+      role: "operario" as const,
+      department: "almacen" as const,
+      status: "activo" as const,
+    };
+
+    // Act
+    await repository.addMember(member);
+    const afterCreate = await repository.loadMembers();
+
+    await repository.updateMember("MI-99", { role: "responsable" });
+    const afterUpdate = await repository.loadMembers();
+
+    await repository.deleteMember("MI-99");
+    const afterDelete = await repository.loadMembers();
+
+    // Assert
+    expect(afterCreate.find((entry) => entry.id === "MI-99")).toEqual(member);
+    expect(afterUpdate.find((entry) => entry.id === "MI-99")?.role).toBe(
+      "responsable",
+    );
+    expect(afterDelete.find((entry) => entry.id === "MI-99")).toBeUndefined();
+  });
 });

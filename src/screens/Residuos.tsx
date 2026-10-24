@@ -1,5 +1,6 @@
-import type { WarehouseRepository } from "../data/repository";
-import { useShift } from "../data/useShift";
+import { useEffect, useState } from "react";
+
+import type { ShiftData, WarehouseRepository } from "../data/repository";
 import { formatCount } from "../domain/format";
 import type { WasteRecord } from "../domain/operations";
 import { wasteTotalKg } from "../domain/operations";
@@ -19,13 +20,39 @@ export function Residuos({
   repository: WarehouseRepository;
   today: string;
 }) {
-  const shift = useShift(repository, today);
+  const [shift, setShift] = useState<ShiftData | null>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  async function refresh() {
+    setShift(await repository.loadShift(today));
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    repository.loadShift(today).then((data) => {
+      if (!cancelled) setShift(data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [repository, today]);
 
   if (!shift) {
     return <div className="empty-slot">Cargando el turno…</div>;
   }
 
   const totalKg = wasteTotalKg(shift.wasteRecords);
+
+  async function addRecord(record: WasteRecord) {
+    await repository.addWasteRecord(record);
+    await refresh();
+    setShowForm(false);
+  }
+
+  async function removeRecord(recordId: string) {
+    await repository.deleteWasteRecord(recordId);
+    await refresh();
+  }
 
   return (
     <>
@@ -36,7 +63,18 @@ export function Residuos({
             Retiradas con gestor autorizado y certificado de tratamiento.
           </p>
         </div>
+        <div className="actions">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => setShowForm((open) => !open)}
+          >
+            {showForm ? "Cerrar formulario" : "Registrar retirada"}
+          </button>
+        </div>
       </div>
+
+      {showForm ? <WasteForm today={today} onSubmit={addRecord} /> : null}
 
       <div className="kpi-strip two">
         <section className="kpi">
@@ -55,34 +93,112 @@ export function Residuos({
         </section>
       </div>
 
-      <table className="albaranes">
-        <thead>
-          <tr>
-            <th>Registro</th>
-            <th>Fecha</th>
-            <th>Tipo</th>
-            <th className="col-num">Cantidad</th>
-            <th>Gestor autorizado</th>
-            <th>Certificado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {shift.wasteRecords.map((record) => (
-            <tr key={record.id}>
-              <td className="code">{record.id}</td>
-              <td className="code loc">{record.date}</td>
-              <td className="col-identity">{KIND_COPY[record.kind]}</td>
-              <td className="col-num">{`${formatCount(record.quantityKg)} kg`}</td>
-              <td>{record.handler}</td>
-              <td className="code loc">{record.certificateRef}</td>
+      {shift.wasteRecords.length === 0 ? (
+        <div className="empty-slot">Sin retiradas registradas.</div>
+      ) : (
+        <table className="albaranes">
+          <thead>
+            <tr>
+              <th>Registro</th>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th className="col-num">Cantidad</th>
+              <th>Gestor autorizado</th>
+              <th>Certificado</th>
+              <th>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {shift.wasteRecords.map((record) => (
+              <tr key={record.id}>
+                <td className="code">{record.id}</td>
+                <td className="code loc">{record.date}</td>
+                <td className="col-identity">{KIND_COPY[record.kind]}</td>
+                <td className="col-num">{`${formatCount(record.quantityKg)} kg`}</td>
+                <td>{record.handler}</td>
+                <td className="code loc">{record.certificateRef}</td>
+                <td>
+                  <button
+                    type="button"
+                    className="btn btn-small btn-danger"
+                    onClick={() => removeRecord(record.id)}
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
       <div className="table-foot">
         <span>{`${shift.wasteRecords.length} retiradas registradas`}</span>
         <span className="num">Sin residuos sin certificar</span>
       </div>
     </>
+  );
+}
+
+function WasteForm({
+  today,
+  onSubmit,
+}: {
+  today: string;
+  onSubmit: (record: WasteRecord) => void;
+}) {
+  return (
+    <form
+      className="reception-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        onSubmit({
+          id: String(form.get("id")),
+          date: String(form.get("date")),
+          kind: String(form.get("kind")) as WasteRecord["kind"],
+          quantityKg: Number(form.get("quantityKg")),
+          handler: String(form.get("handler")),
+          certificateRef: String(form.get("certificateRef")),
+        });
+      }}
+    >
+      <div className="form-grid">
+        <label>
+          Registro
+          <input name="id" required placeholder="RES-07" />
+        </label>
+        <label>
+          Fecha
+          <input name="date" type="date" required defaultValue={today} />
+        </label>
+        <label>
+          Tipo
+          <select name="kind" defaultValue="embalaje">
+            {Object.entries(KIND_COPY).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Cantidad (kg)
+          <input name="quantityKg" type="number" min={0} required />
+        </label>
+        <label>
+          Gestor autorizado
+          <input name="handler" required placeholder="EcoGestión Ebro" />
+        </label>
+        <label>
+          Certificado
+          <input name="certificateRef" required placeholder="CERT-2026-116" />
+        </label>
+      </div>
+      <div className="form-actions">
+        <button type="submit" className="btn btn-primary">
+          Guardar retirada
+        </button>
+      </div>
+    </form>
   );
 }
