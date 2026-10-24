@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.1] - 2026-10-24
+
+Highlights: fix: update AGENTS.md with revised design guidelines and sidebar account po.
+
+- [x] 🐛 fix: update AGENTS.md with revised design guidelines and sidebar account po
+  - `AGENTS.md`
+- [x] 🚀 feat: update configuration files and implement Firebase Repository
+- [x] 🚀 feat: implement Firebase migration plan with Firestore repository and add c
+- [x] 📦 build(bun.lock): add prepare, typecheck, @types/bun and vitest to package.json
+- [x] 🔹 ]7;file://localhost/home/senseikatana/Proyectos/panel-olayarn add v1.22.22 [1/4] Resolving packages... [2/4] Fetching packages... [3/4] Linking dependencies... [4/4] Building fresh packages... success Saved lockfile. success Saved 5 new dependencies. info Direct dependencies ├─ husky@9.1.7 ├─ lint-staged@17.6.0 └─ prettier@3.9.10 info All dependencies ├─ husky@9.1.7 ├─ lint-staged@17.6.0 ├─ prettier@3.9.10 ├─ string-argv@0.3.2 └─ yaml@2.9.1 $ husky Done in 1.89s. ]7;file://localhost/home/senseikatana/Proyectos/panel-ola]7;file://localhost/home/senseikatana/Proyectos/panel-olafix: update receiver mode: Operate, add albaran validation and reporting
+
 ## [0.2.0] - 2026-10-24
 
 Highlights: feat: update configuration files and implement Firebase Repository.
