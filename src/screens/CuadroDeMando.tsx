@@ -10,6 +10,7 @@ import {
   shrinkageByMaterial,
   summarizeShift,
 } from "../domain/reception";
+import { formatCount, formatEur } from "../domain/format";
 
 export function CuadroDeMando({
   repository,
@@ -43,13 +44,16 @@ export function CuadroDeMando({
     .sort((a, b) => b.id.localeCompare(a.id))
     .slice(0, 6);
 
+  const dailyExpenses = shift.expenses.filter((e) => e.date === today);
+  const dailyTotalEur = dailyExpenses.reduce((sum, e) => sum + e.amountEur, 0);
+
   return (
     <>
       <div className="title-row">
         <div>
           <h1>Cuadro de mando</h1>
           <p className="sub">
-            Turno mañana · Nave 3 · todo el movimiento del almacén en un golpe.
+            Turno de hoy · Nave 3 · {today} · movimiento completo del almacén.
           </p>
         </div>
         <div className="actions">
@@ -73,6 +77,37 @@ export function CuadroDeMando({
             <Link to="/">Ver la recepción completa</Link>
           </div>
         </section>
+
+        <section className="gastos">
+          <div className="panel-head">
+            <h2>Gastos del día</h2>
+            <span className="count">
+              {formatCount(dailyExpenses.length)} conceptos
+            </span>
+          </div>
+          <div className="kpi-panel">
+            <section className="kpi">
+              <div className="kpi-label">Total gastado hoy</div>
+              <div className="kpi-value num">{formatEur(dailyTotalEur)}</div>
+              <div className="kpi-note">
+                {dailyExpenses.length > 0
+                  ? dailyExpenses.map((e) => e.concept).join(" · ")
+                  : "Sin gastos registrados"}
+              </div>
+            </section>
+          </div>
+          {dailyExpenses.length > 0 && (
+            <ul className="gastos-list">
+              {dailyExpenses.map((expense) => (
+                <li key={expense.id}>
+                  <span>{expense.concept}</span>
+                  <span className="num">{formatEur(expense.amountEur)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
         <aside>
           <MermaRail
             shrinkage={summary.shrinkage}

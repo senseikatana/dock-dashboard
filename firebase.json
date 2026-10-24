@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "source": "src",
+    "runtime": "nodejs18.x"
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "dist",
+    "ignore": ["firebase.json", "firestore.rules", "indexes.indexes"]
+  }
+}

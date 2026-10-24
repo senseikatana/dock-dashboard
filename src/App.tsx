@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { Route, Routes } from "react-router-dom";
 
 import { Shell } from "./components/Shell";
-import { MemoryWarehouseRepository } from "./data/memoryRepository";
-import { buildSeed } from "./data/seed";
+import { FirebaseWarehouseRepository } from "./data/firebaseRepository";
 import { CuadroDeMando } from "./screens/CuadroDeMando";
 import { Gastos } from "./screens/Gastos";
 import { Incidencias } from "./screens/Incidencias";
@@ -14,9 +13,7 @@ import { Residuos } from "./screens/Residuos";
 const today = new Date().toISOString().slice(0, 10);
 
 export function App() {
-  const [repository] = useState(
-    () => new MemoryWarehouseRepository(buildSeed(today)),
-  );
+  const repository = useMemo(() => new FirebaseWarehouseRepository(), []);
 
   return (
     <Shell freshness="Datos del turno · 13:52">

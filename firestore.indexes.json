@@ -1,0 +1,25 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "albaranes",
+      "fields": [
+        { "fieldPath": "date", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "shrinkageEvents",
+      "fields": [
+        { "fieldPath": "albaranId", "order": "ASCENDING" },
+        { "fieldPath": "known", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "expenses",
+      "fields": [
+        { "fieldPath": "date", "order": "ASCENDING" },
+        { "fieldPath": "category", "order": "ASCENDING" }
+      ]
+    }
+  ]
+}
