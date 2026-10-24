@@ -7,6 +7,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2026-10-24
+
+Highlights: feat: update configuration files and implement Firebase Repository.
+
+- [x] 🚀 feat: update configuration files and implement Firebase Repository
+  - `.env.example`
+  - `.gitignore`
+  - `.oxlintrc.json`
+  - `AGENTS.md`
+  - `DEPLOY.md`
+  - `DESIGN.md`
+  - `PRODUCT.md`
+  - `README.md`
+  - `bun.lock`
+  - `e2e/global-setup.ts`
+  - `e2e/recepcion.spec.ts`
+  - `firebase.json`
+  - `firestore.rules`
+  - `index.html`
+  - `package-lock.json`
+  - `package.json`
+  - `playwright.config.ts`
+  - `scripts/create-auth-users.mjs`
+  - `scripts/purge-firestore.mjs`
+  - `scripts/seed-firestore.mjs`
+  - `scripts/set-role-claims.mjs`
+  - `src/App.tsx`
+  - `src/auth/AuthProvider.tsx`
+  - `src/auth/access.test.ts`
+  - `src/auth/access.ts`
+  - `src/auth/context.ts`
+  - `src/auth/useAuth.ts`
+  - `src/components/AlbaranesTable.tsx`
+  - `src/components/KpiStrip.tsx`
+  - `src/components/PayslipsAdmin.tsx`
+  - `src/components/Shell.tsx`
+  - `src/data/authProvisioner.ts`
+  - `src/data/avatarStorage.ts`
+  - `src/data/firebaseClient.ts`
+  - `src/data/firebaseRepository.ts`
+  - `src/data/memoryRepository.test.ts`
+  - `src/data/memoryRepository.ts`
+  - `src/data/repository.ts`
+  - `src/data/seed.ts`
+  - `src/domain/members.ts`
+  - `src/domain/reception.ts`
+  - `src/domain/workday.ts`
+  - `src/main.tsx`
+  - `src/screens/Account.tsx`
+  - `src/screens/Ajustes.tsx`
+  - `src/screens/CuadroDeMando.tsx`
+  - `src/screens/Gastos.tsx`
+  - `src/screens/Incidencias.tsx`
+  - `src/screens/Maquinaria.tsx`
+  - `src/screens/MyPanel.tsx`
+  - `src/screens/Payslips.tsx`
+  - `src/screens/Recepcion.tsx`
+  - `src/screens/Residuos.tsx`
+  - `src/screens/SignIn.tsx`
+  - `src/screens/Timesheet.tsx`
+  - `src/styles/app.css`
+  - `src/styles/tokens.css`
+  - `src/ui/dialogs.ts`
+  - `src/ui/theme.ts`
+  - `vite.config.ts`
+  - `workers/dock-dashboard/.dev.vars.example`
+  - `workers/dock-dashboard/bun.lock`
+  - `workers/dock-dashboard/package.json`
+  - `workers/dock-dashboard/src/index.ts`
+  - `workers/dock-dashboard/tsconfig.json`
+  - `workers/dock-dashboard/wrangler.dev.jsonc`
+  - `workers/dock-dashboard/wrangler.jsonc`
+- [x] 🚀 feat: implement Firebase migration plan with Firestore repository and add c
+- [x] 📦 build(bun.lock): add prepare, typecheck, @types/bun and vitest to package.json
+- [x] 🔹 ]7;file://localhost/home/senseikatana/Proyectos/panel-olayarn add v1.22.22 [1/4] Resolving packages... [2/4] Fetching packages... [3/4] Linking dependencies... [4/4] Building fresh packages... success Saved lockfile. success Saved 5 new dependencies. info Direct dependencies ├─ husky@9.1.7 ├─ lint-staged@17.6.0 └─ prettier@3.9.10 info All dependencies ├─ husky@9.1.7 ├─ lint-staged@17.6.0 ├─ prettier@3.9.10 ├─ string-argv@0.3.2 └─ yaml@2.9.1 $ husky Done in 1.89s. ]7;file://localhost/home/senseikatana/Proyectos/panel-ola]7;file://localhost/home/senseikatana/Proyectos/panel-olafix: update receiver mode: Operate, add albaran validation and reporting
+
 ## [0.1.0] - 2026-10-24
 
 Highlights: feat: implement Firebase migration plan with Firestore repository and add c, plus 2 more changes.
