@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="es-ES">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Panel OLA — Recepción de mercancía</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        width: 1440px;
+        height: 900px;
+        overflow: hidden;
+        margin: 0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Archivo", sans-serif;
+        background: #dedad2;
+        color: #2a2320;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .app {
+        display: flex;
+        width: 1440px;
+        height: 900px;
+      }
+      .num {
+        font-family: "Barlow Condensed", sans-serif;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.01em;
+      }
+      /* ---- sidebar ---- */
+      .side {
+        width: 236px;
+        flex: 0 0 236px;
+        background: #2a2320;
+        color: #e8e4dc;
+        display: flex;
+        flex-direction: column;
+        padding: 26px 0 18px;
+      }
+      .brand {
+        padding: 0 22px 22px;
+        border-bottom: 1px solid rgba(232, 228, 220, 0.14);
+      }
+      .brand h1 {
+        font-size: 19px;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: 0.02em;
+      }
+      .brand h1 span {
+        color: #d95d2b;
+      }
+      .brand p {
+        margin: 5px 0 0;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #b9b4ac;
+      }
+      .nav {
+        padding: 18px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .nav a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        color: #c9c4bc;
+        text-decoration: none;
+        font-size: 13.5px;
+        font-weight: 500;
+        border-radius: 2px;
+      }
+      .nav a .idx {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 12px;
+        color: #8c6a4e;
+        letter-spacing: 0.06em;
+      }
+      .nav a.on {
+        background: #e8e4dc;
+        color: #2a2320;
+        font-weight: 600;
+      }
+      .nav a.on .idx {
+        color: #d95d2b;
+      }
+      .nav a:not(.on):hover {
+        background: rgba(232, 228, 220, 0.08);
+      }
+      .side .spacer {
+        flex: 1;
+      }
+      .shift {
+        margin: 0 14px;
+        padding: 12px 14px;
+        border: 1px solid rgba(232, 228, 220, 0.18);
+        background: rgba(140, 106, 78, 0.16);
+      }
+      .shift b {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 600;
+      }
+      .shift span {
+        font-size: 11px;
+        color: #b9b4ac;
+        letter-spacing: 0.04em;
+      }
+      /* ---- main ---- */
+      .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 26px 30px 0;
+        min-width: 0;
+      }
+      .head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        padding-bottom: 18px;
+        border-bottom: 2px solid #2a2320;
+      }
+      .head .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #8c6a4e;
+        font-weight: 600;
+      }
+      .head h2 {
+        margin: 6px 0 0;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .head .sub {
+        margin: 5px 0 0;
+        font-size: 12.5px;
+        color: #6c645c;
+      }
+      .btn {
+        font-family: "Archivo", sans-serif;
+        font-size: 13.5px;
+        font-weight: 600;
+        color: #e8e4dc;
+        background: #d95d2b;
+        border: 0;
+        border-radius: 2px;
+        padding: 11px 18px;
+        letter-spacing: 0.01em;
+      }
+      .btn.ghost {
+        background: transparent;
+        color: #2a2320;
+        border: 1px solid #b9b4ac;
+        margin-right: 8px;
+      }
+      /* ---- kpi strip ---- */
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        margin: 18px 0 0;
+        border: 1px solid #c7c1b7;
+        background: #e8e4dc;
+      }
+      .kpi {
+        padding: 13px 18px 14px;
+        border-right: 1px solid #c7c1b7;
+      }
+      .kpi:last-child {
+        border-right: 0;
+      }
+      .kpi .lbl {
+        font-size: 11px;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: #6c645c;
+        font-weight: 600;
+      }
+      .kpi .val {
+        font-family: "Barlow Condensed", sans-serif;
+        font-variant-numeric: tabular-nums;
+        font-size: 31px;
+        font-weight: 600;
+        line-height: 1.05;
+        margin-top: 3px;
+      }
+      .kpi .val em {
+        font-style: normal;
+        font-size: 17px;
+        color: #6c645c;
+      }
+      .kpi .meta {
+        font-size: 11px;
+        color: #8c6a4e;
+        margin-top: 2px;
+      }
+      .kpi .val.hot {
+        color: #d95d2b;
+      }
+      /* ---- workspace ---- */
+      .work {
+        display: grid;
+        grid-template-columns: 1fr 286px;
+        gap: 18px;
+        margin-top: 18px;
+        flex: 1;
+        min-height: 0;
+      }
+      .panel {
+        border: 1px solid #c7c1b7;
+        background: #e8e4dc;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .phead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid #c7c1b7;
+      }
+      .phead h3 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .tabs {
+        display: flex;
+        gap: 2px;
+      }
+      .tabs span {
+        font-size: 11.5px;
+        padding: 5px 11px;
+        border: 1px solid #c7c1b7;
+        color: #6c645c;
+      }
+      .tabs span.on {
+        background: #2a2320;
+        border-color: #2a2320;
+        color: #e8e4dc;
+        font-weight: 600;
+      }
+      /* table with ceramic-tile module armature */
+      .table {
+        flex: 1;
+        overflow: hidden;
+        background-image:
+          linear-gradient(
+            to right,
+            rgba(42, 35, 32, 0.055) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            to bottom,
+            rgba(42, 35, 32, 0.055) 1px,
+            transparent 1px
+          );
+        background-size: 74px 38px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      thead th {
+        font-size: 10.5px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #6c645c;
+        font-weight: 600;
+        text-align: left;
+        padding: 9px 14px;
+        background: #d5d0c7;
+        border-bottom: 1px solid #2a2320;
+      }
+      thead th.r {
+        text-align: right;
+      }
+      tbody td {
+        padding: 11px 14px;
+        font-size: 13px;
+        border-bottom: 1px solid rgba(42, 35, 32, 0.12);
+      }
+      tbody tr:nth-child(odd) {
+        background: rgba(232, 228, 220, 0.62);
+      }
+      tbody tr:nth-child(even) {
+        background: rgba(185, 180, 172, 0.34);
+      }
+      tbody td.r {
+        text-align: right;
+        font-family: "Barlow Condensed", sans-serif;
+        font-variant-numeric: tabular-nums;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      td.code {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+      }
+      td.loc {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 15px;
+        letter-spacing: 0.05em;
+        color: #6c645c;
+      }
+      .pill {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border: 1px solid #b9b4ac;
+        color: #5b544c;
+        background: rgba(255, 255, 255, 0.35);
+      }
+      .pill.warn {
+        color: #d95d2b;
+        border-color: #d95d2b;
+        background: rgba(217, 93, 43, 0.09);
+      }
+      .pill.ok {
+        color: #3b4a32;
+        border-color: #9ba48f;
+      }
+      .tfoot {
+        padding: 10px 16px;
+        border-top: 1px solid #c7c1b7;
+        font-size: 11.5px;
+        color: #6c645c;
+        display: flex;
+        justify-content: space-between;
+      }
+      /* right column */
+      .side-block {
+        padding: 14px 16px;
+        border-bottom: 1px solid #c7c1b7;
+      }
+      .side-block:last-child {
+        border-bottom: 0;
+      }
+      .side-block h4 {
+        margin: 0 0 2px;
+        font-size: 12px;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: #6c645c;
+        font-weight: 600;
+      }
+      .split {
+        margin: 12px 0 0;
+      }
+      .bar {
+        height: 10px;
+        display: flex;
+        border: 1px solid #c7c1b7;
+      }
+      .bar i {
+        display: block;
+        height: 100%;
+      }
+      .bar .known {
+        width: 69.4%;
+        background: #8c6a4e;
+      }
+      .bar .unknown {
+        width: 30.6%;
+        background: #d95d2b;
+      }
+      .legend {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 9px;
+      }
+      .legend div {
+        font-size: 11.5px;
+        color: #6c645c;
+      }
+      .legend b {
+        display: block;
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 22px;
+        font-weight: 600;
+        color: #2a2320;
+      }
+      .legend .u b {
+        color: #d95d2b;
+      }
+      .rows {
+        margin: 10px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .rows li {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        padding: 6px 0;
+        border-bottom: 1px dotted rgba(42, 35, 32, 0.22);
+        color: #4a433c;
+      }
+      .rows li span {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 14.5px;
+        font-weight: 600;
+        color: #2a2320;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="side">
+        <div class="brand">
+          <h1>Panel <span>OLA</span></h1>
+          <p>Logística de obra · Nave 3</p>
+        </div>
+        <nav class="nav">
+          <a href="#"><span class="idx">01</span>Cuadro de mando</a>
+          <a class="on" href="#"><span class="idx">02</span>Recepción</a>
+          <a href="#"><span class="idx">03</span>Incidencias y mermas</a>
+          <a href="#"><span class="idx">04</span>Maquinaria</a>
+          <a href="#"><span class="idx">05</span>Residuos</a>
+          <a href="#"><span class="idx">06</span>Gastos</a>
+        </nav>
+        <div class="spacer"></div>
+        <div class="shift">
+          <b>K. Ramírez</b><span>Turno mañana · 06:00–14:00</span>
+        </div>
+      </aside>
+      <main class="main">
+        <div class="head">
+          <div>
+            <div class="eyebrow">Recepción · Jueves 22 de enero</div>
+            <h2>Recepción de mercancía</h2>
+            <p class="sub">
+              Albaranes pendientes de validación en muelle 01–07. Prioridad:
+              materiales con reserva de obra.
+            </p>
+          </div>
+          <div>
+            <button class="btn ghost">Exportar CSV</button
+            ><button class="btn">Registrar recepción</button>
+          </div>
+        </div>
+        <div class="kpis">
+          <div class="kpi">
+            <div class="lbl">Recepciones hoy</div>
+            <div class="val">14</div>
+            <div class="meta">+3 frente a ayer</div>
+          </div>
+          <div class="kpi">
+            <div class="lbl">Conformidad</div>
+            <div class="val">96,4<em> %</em></div>
+            <div class="meta">Últimos 30 días</div>
+          </div>
+          <div class="kpi">
+            <div class="lbl">Mermas del mes</div>
+            <div class="val hot">1.240 <em>€</em></div>
+            <div class="meta">860 € conocidas</div>
+          </div>
+          <div class="kpi">
+            <div class="lbl">Maquinaria operativa</div>
+            <div class="val">8<em> / 9</em></div>
+            <div class="meta">Carretilla 02 en taller</div>
+          </div>
+        </div>
+        <div class="work">
+          <section class="panel">
+            <div class="phead">
+              <h3>Albaranes pendientes de validar</h3>
+              <div class="tabs">
+                <span class="on">Pendientes · 8</span><span>Todos</span
+                ><span>Con incidencia · 2</span>
+              </div>
+            </div>
+            <div class="table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Albarán</th>
+                    <th>Proveedor</th>
+                    <th>Transportista</th>
+                    <th class="r">Bultos</th>
+                    <th>Ubicación</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="code">ALB-2026-0412</td>
+                    <td>Cerámicas del Ebro</td>
+                    <td>Transportes Ebro S.L.</td>
+                    <td class="r">24 palets</td>
+                    <td class="loc">03-A-12</td>
+                    <td><span class="pill">En validación</span></td>
+                  </tr>
+                  <tr>
+                    <td class="code">ALB-2026-0413</td>
+                    <td>Pladur Ibérica</td>
+                    <td>FrigoTrans Norte</td>
+                    <td class="r">12 bultos</td>
+                    <td class="loc">05-C-04</td>
+                    <td><span class="pill ok">Conforme</span></td>
+                  </tr>
+                  <tr>
+                    <td class="code">ALB-2026-0414</td>
+                    <td>Cementos del Norte</td>
+                    <td>Grúas Vega</td>
+                    <td class="r">18 palets</td>
+                    <td class="loc">02-B-07</td>
+                    <td><span class="pill warn">Incidencia</span></td>
+                  </tr>
+                  <tr>
+                    <td class="code">ALB-2026-0415</td>
+                    <td>Maderas Duero</td>
+                    <td>Duero Logística</td>
+                    <td class="r">9 bultos</td>
+                    <td class="loc">06-A-01</td>
+                    <td><span class="pill ok">Conforme</span></td>
+                  </tr>
+                  <tr>
+                    <td class="code">ALB-2026-0416</td>
+                    <td>Áridos Segura</td>
+                    <td>Transportes Ebro S.L.</td>
+                    <td class="r">30 palets</td>
+                    <td class="loc">01-D-03</td>
+                    <td><span class="pill">En validación</span></td>
+                  </tr>
+                  <tr>
+                    <td class="code">ALB-2026-0417</td>
+                    <td>Ferrallas Peñalver</td>
+                    <td>Grúas Vega</td>
+                    <td class="r">6 bultos</td>
+                    <td class="loc">04-B-11</td>
+                    <td><span class="pill ok">Conforme</span></td>
+                  </tr>
+                  <tr>
+                    <td class="code">ALB-2026-0418</td>
+                    <td>Yesos Alcarria</td>
+                    <td>Duero Logística</td>
+                    <td class="r">21 palets</td>
+                    <td class="loc">02-C-05</td>
+                    <td><span class="pill warn">Incidencia</span></td>
+                  </tr>
+                  <tr>
+                    <td class="code">ALB-2026-0419</td>
+                    <td>Pinturas Zadorra</td>
+                    <td>FrigoTrans Norte</td>
+                    <td class="r">14 bultos</td>
+                    <td class="loc">07-A-08</td>
+                    <td><span class="pill">En validación</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="tfoot">
+              <span>8 de 37 albaranes · Muelle 01–07</span
+              ><span class="num">Actualizado 11:42</span>
+            </div>
+          </section>
+          <aside class="panel">
+            <div class="side-block">
+              <h4>Mermas conocidas vs desconocidas</h4>
+              <div class="split">
+                <div class="bar">
+                  <i class="known"></i><i class="unknown"></i>
+                </div>
+                <div class="legend">
+                  <div class="k">
+                    Conocidas<b class="num">860 €</b>69,4 % del total
+                  </div>
+                  <div class="u">
+                    Desconocidas<b class="num">380 €</b>30,6 % del total
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="side-block">
+              <h4>Desglose por material</h4>
+              <ul class="rows">
+                <li>Cerámica y pavimento <span>410 €</span></li>
+                <li>Cemento y áridos <span>295 €</span></li>
+                <li>Pladur y aislamiento <span>230 €</span></li>
+                <li>Madera y derivados <span>185 €</span></li>
+                <li>Químicos de obra <span>120 €</span></li>
+              </ul>
+            </div>
+            <div class="side-block">
+              <h4>Incidencias abiertas</h4>
+              <ul class="rows">
+                <li>Rotura de embalaje · 0414 <span>2 uds</span></li>
+                <li>Exceso de peso · 0418 <span>1 ud</span></li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Panel OLA — Terreno de almacén</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 1440px;
+        height: 900px;
+        overflow: hidden;
+      }
+      body {
+        font-family: "Archivo", system-ui, sans-serif;
+        background: #fafaf7;
+        color: #1a1d1a;
+        font-size: 14px;
+        line-height: 1.45;
+        display: flex;
+      }
+      .num {
+        font-family: "Barlow Condensed", "Archivo", sans-serif;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* shell */
+      .rail {
+        width: 216px;
+        height: 900px;
+        padding: 20px 14px;
+        border-right: 1px solid #e7e6e0;
+        background: #f4f3ee;
+      }
+      .mark {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 4px 6px 26px;
+      }
+      .mark svg {
+        display: block;
+      }
+      .mark b {
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .mark span {
+        display: block;
+        font-size: 11px;
+        color: #6b6f68;
+      }
+      .nav a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        margin: 2px 0;
+        border-radius: 6px;
+        color: #3b3f39;
+        text-decoration: none;
+        font-size: 13.5px;
+      }
+      .nav a.on {
+        background: #e8e7e0;
+        color: #1a1d1a;
+        font-weight: 600;
+      }
+      .nav a i {
+        width: 6px;
+        height: 6px;
+        border-radius: 2px;
+        background: #c6c4ba;
+      }
+      .nav a.on i {
+        background: #e24e1b;
+      }
+      .rail .foot {
+        margin-top: 300px;
+        padding: 10px;
+        border-top: 1px solid #e7e6e0;
+        font-size: 11.5px;
+        color: #6b6f68;
+      }
+
+      /* main */
+      .main {
+        flex: 1;
+        height: 900px;
+        padding: 22px 28px;
+      }
+      .trow {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+      .trow h1 {
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      .trow .fresh {
+        font-size: 12px;
+        color: #6b6f68;
+      }
+      .trow .sp {
+        flex: 1;
+      }
+      .btn {
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 8px 14px;
+        border: 1px solid #1a1d1a;
+        border-radius: 6px;
+        background: #1a1d1a;
+        color: #fafaf7;
+      }
+      .btn.ghost {
+        background: transparent;
+        color: #1a1d1a;
+        border-color: #d6d4ca;
+      }
+
+      /* kpi strip */
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border: 1px solid #e7e6e0;
+        border-radius: 8px;
+        background: #ffffff;
+        margin-bottom: 16px;
+      }
+      .kpi {
+        padding: 14px 18px;
+        border-left: 1px solid #efede6;
+      }
+      .kpi:first-child {
+        border-left: none;
+      }
+      .kpi .l {
+        font-size: 12px;
+        color: #6b6f68;
+      }
+      .kpi .v {
+        font-size: 26px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        margin-top: 2px;
+      }
+      .kpi .d {
+        font-size: 12px;
+        color: #6b6f68;
+        margin-top: 2px;
+      }
+      .kpi .d.bad {
+        color: #b3311f;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 560px 1fr;
+        gap: 16px;
+      }
+      .card {
+        border: 1px solid #e7e6e0;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+      .card h2 {
+        font-size: 15px;
+        font-weight: 600;
+        padding: 14px 18px 0;
+      }
+      .card .sub {
+        font-size: 12px;
+        color: #6b6f68;
+        padding: 2px 18px 12px;
+      }
+
+      /* table */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        font-size: 12px;
+        font-weight: 400;
+        color: #6b6f68;
+        text-align: left;
+        padding: 8px 18px;
+      }
+      th.r,
+      td.r {
+        text-align: right;
+      }
+      td {
+        font-size: 13px;
+        padding: 11px 18px;
+        border-top: 1px solid #f1efe8;
+      }
+      tr:hover td {
+        background: #fafaf7;
+      }
+      td.code {
+        font-family: "Barlow Condensed", sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11.5px;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      .p-ok {
+        background: #e4ede2;
+        color: #2f4529;
+      }
+      .p-wait {
+        background: #f6efd6;
+        color: #6b551b;
+      }
+      .p-bad {
+        background: #f7e3dc;
+        color: #832a17;
+      }
+
+      /* terrain map */
+      .mapwrap {
+        padding: 8px 18px 18px;
+      }
+      .legend {
+        display: flex;
+        gap: 18px;
+        padding: 10px 18px 14px;
+        border-top: 1px solid #f1efe8;
+      }
+      .legend div {
+        font-size: 12px;
+        color: #3b3f39;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .legend i {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        display: inline-block;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="rail">
+      <div class="mark">
+        <svg width="26" height="26" viewBox="0 0 26 26">
+          <rect x="1" y="1" width="24" height="24" rx="5" fill="#1A1D1A" />
+          <path
+            d="M6 19 L10 7 L13 15 L16 9 L20 19"
+            stroke="#E24E1B"
+            stroke-width="2.2"
+            fill="none"
+          />
+        </svg>
+        <div><b>Panel OLA</b><span>Almacén Norte · Turno mañana</span></div>
+      </div>
+      <nav class="nav">
+        <a class="on" href="#"><i></i>Cuadro de mando</a>
+        <a href="#"><i></i>Recepción</a>
+        <a href="#"><i></i>Incidencias y mermas</a>
+        <a href="#"><i></i>Maquinaria</a>
+        <a href="#"><i></i>Residuos</a>
+        <a href="#"><i></i>Gastos generales</a>
+      </nav>
+      <div class="foot">
+        Guardia de muelle: 06:00 – 14:00<br />Responsable OLA: M. Quintana
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="trow">
+        <h1>Cuadro de mando</h1>
+        <span class="fresh">Datos de hoy 13:52 · Actualizar</span>
+        <span class="sp"></span>
+        <button class="btn ghost">Imprimir albarán</button>
+        <button class="btn">Registrar recepción</button>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="l">Recepciones hoy</div>
+          <div class="v num">14</div>
+          <div class="d">vs. media de viernes 12</div>
+        </div>
+        <div class="kpi">
+          <div class="l">Conformidad</div>
+          <div class="v num">96,4%</div>
+          <div class="d">últimos 30 días</div>
+        </div>
+        <div class="kpi">
+          <div class="l">Mermas del mes</div>
+          <div class="v num">1.240 €</div>
+          <div class="d bad">+180 € vs. septiembre</div>
+        </div>
+        <div class="kpi">
+          <div class="l">Maquinaria operativa</div>
+          <div class="v num">8/9</div>
+          <div class="d">retráctil 2 en revisión</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <section class="card">
+          <h2>Albaranes pendientes de validar</h2>
+          <div class="sub">6 en puerta · 2 con incidencia</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Albarán</th>
+                <th>Proveedor</th>
+                <th class="r">Bultos</th>
+                <th>Ubicación</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="code">ALB-2026-0412</td>
+                <td>Cerámicas del Ebro</td>
+                <td class="r num">24 palets</td>
+                <td class="code">03-A-12</td>
+                <td><span class="pill p-wait">En validación</span></td>
+              </tr>
+              <tr>
+                <td class="code">ALB-2026-0413</td>
+                <td>Pladur Ibérica</td>
+                <td class="r num">12 bultos</td>
+                <td class="code">05-C-04</td>
+                <td><span class="pill p-ok">Conforme</span></td>
+              </tr>
+              <tr>
+                <td class="code">ALB-2026-0414</td>
+                <td>Cementos del Norte</td>
+                <td class="r num">18 palets</td>
+                <td class="code">02-B-07</td>
+                <td><span class="pill p-bad">Incidencia</span></td>
+              </tr>
+              <tr>
+                <td class="code">ALB-2026-0415</td>
+                <td>Maderas Duero</td>
+                <td class="r num">9 bultos</td>
+                <td class="code">06-A-01</td>
+                <td><span class="pill p-ok">Conforme</span></td>
+              </tr>
+              <tr>
+                <td class="code">ALB-2026-0416</td>
+                <td>Aislamientos Vigo</td>
+                <td class="r num">30 bultos</td>
+                <td class="code">04-D-02</td>
+                <td><span class="pill p-wait">En validación</span></td>
+              </tr>
+              <tr>
+                <td class="code">ALB-2026-0417</td>
+                <td>Ferretería Pisuerga</td>
+                <td class="r num">6 bultos</td>
+                <td class="code">01-A-09</td>
+                <td><span class="pill p-ok">Conforme</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="card">
+          <h2>Terreno de almacén · ruta de estiba de hoy</h2>
+          <div class="sub">6 paradas · 412 m recorridos · última 03-A-12</div>
+          <div class="mapwrap">
+            <svg width="748" height="392" viewBox="0 0 748 392">
+              <rect x="0" y="0" width="748" height="392" fill="#FAFAF7" />
+              <g stroke="#E2E0D6" stroke-width="1">
+                <path
+                  d="M0 60 H748 M0 130 H748 M0 200 H748 M0 270 H748 M0 330 H748"
+                />
+                <path
+                  d="M90 20 V330 M210 20 V330 M330 20 V330 M450 20 V330 M570 20 V330 M690 20 V330"
+                />
+              </g>
+              <g>
+                <rect x="14" y="28" width="64" height="26" fill="#4A6741" />
+                <rect x="98" y="28" width="102" height="26" fill="#4A6741" />
+                <rect x="222" y="28" width="96" height="26" fill="#E8C547" />
+                <rect x="346" y="28" width="94" height="26" fill="#4A6741" />
+                <rect x="462" y="28" width="98" height="26" fill="#2F6DB4" />
+                <rect x="582" y="28" width="98" height="26" fill="#4A6741" />
+                <rect x="14" y="98" width="64" height="26" fill="#4A6741" />
+                <rect x="98" y="98" width="102" height="26" fill="#E8C547" />
+                <rect x="222" y="98" width="96" height="26" fill="#4A6741" />
+                <rect x="346" y="98" width="94" height="26" fill="#4A6741" />
+                <rect x="462" y="98" width="98" height="26" fill="#4A6741" />
+                <rect x="582" y="98" width="98" height="26" fill="#E8C547" />
+                <rect x="14" y="168" width="64" height="26" fill="#E8C547" />
+                <rect x="98" y="168" width="102" height="26" fill="#4A6741" />
+                <rect x="222" y="168" width="96" height="26" fill="#4A6741" />
+                <rect x="346" y="168" width="94" height="26" fill="#2F6DB4" />
+                <rect x="462" y="168" width="98" height="26" fill="#4A6741" />
+                <rect x="582" y="168" width="98" height="26" fill="#4A6741" />
+                <rect x="14" y="238" width="64" height="26" fill="#4A6741" />
+                <rect x="98" y="238" width="102" height="26" fill="#4A6741" />
+                <rect x="222" y="238" width="96" height="26" fill="#E8C547" />
+                <rect x="346" y="238" width="94" height="26" fill="#4A6741" />
+                <rect x="462" y="238" width="98" height="26" fill="#4A6741" />
+                <rect x="582" y="238" width="98" height="26" fill="#2F6DB4" />
+              </g>
+              <g stroke="#C9C7BC" stroke-width="1" fill="none">
+                <path
+                  d="M46 54 V88 M150 54 V88 M270 54 V88 M393 54 V88 M511 54 V88 M631 54 V88"
+                />
+                <path
+                  d="M46 124 V158 M150 124 V158 M270 124 V158 M393 124 V158 M511 124 V158 M631 124 V158"
+                />
+                <path
+                  d="M46 194 V228 M150 194 V228 M270 194 V228 M393 194 V228 M511 194 V228 M631 194 V228"
+                />
+              </g>
+              <polyline
+                points="40,330 40,282 150,282 150,212 270,212 270,142 511,142 511,72 631,72 631,212 393,212 393,282"
+                fill="none"
+                stroke="#E24E1B"
+                stroke-width="3"
+                stroke-linejoin="round"
+                stroke-linecap="round"
+              />
+              <g
+                fill="#E24E1B"
+                font-family="Barlow Condensed"
+                font-size="15"
+                font-weight="600"
+                text-anchor="middle"
+              >
+                <circle
+                  cx="40"
+                  cy="330"
+                  r="11"
+                  fill="#FAFAF7"
+                  stroke="#E24E1B"
+                  stroke-width="2.5"
+                />
+                <text x="40" y="335" fill="#E24E1B">1</text>
+                <circle
+                  cx="150"
+                  cy="212"
+                  r="11"
+                  fill="#FAFAF7"
+                  stroke="#E24E1B"
+                  stroke-width="2.5"
+                />
+                <text x="150" y="217" fill="#E24E1B">2</text>
+                <circle
+                  cx="270"
+                  cy="142"
+                  r="11"
+                  fill="#FAFAF7"
+                  stroke="#E24E1B"
+                  stroke-width="2.5"
+                />
+                <text x="270" y="147" fill="#E24E1B">3</text>
+                <circle
+                  cx="511"
+                  cy="72"
+                  r="11"
+                  fill="#FAFAF7"
+                  stroke="#E24E1B"
+                  stroke-width="2.5"
+                />
+                <text x="511" y="77" fill="#E24E1B">4</text>
+                <circle
+                  cx="631"
+                  cy="212"
+                  r="11"
+                  fill="#FAFAF7"
+                  stroke="#E24E1B"
+                  stroke-width="2.5"
+                />
+                <text x="631" y="217" fill="#E24E1B">5</text>
+                <circle
+                  cx="393"
+                  cy="282"
+                  r="11"
+                  fill="#FAFAF7"
+                  stroke="#E24E1B"
+                  stroke-width="2.5"
+                />
+                <text x="393" y="287" fill="#E24E1B">6</text>
+              </g>
+              <g fill="#6B6F68" font-family="Archivo" font-size="11">
+                <text x="14" y="358">Muelle 1</text>
+                <text x="114" y="358">Muelle 2</text>
+                <text x="214" y="358">Muelle 3</text>
+                <text x="314" y="358">Muelle 4</text>
+                <text x="424" y="358">Zona de cuarentena</text>
+                <text x="600" y="358">Exterior</text>
+              </g>
+              <g stroke="#8B8878" stroke-width="1.5" fill="none">
+                <rect x="14" y="340" width="80" height="16" />
+                <rect x="114" y="340" width="80" height="16" />
+                <rect x="214" y="340" width="80" height="16" />
+                <rect x="314" y="340" width="80" height="16" />
+              </g>
+            </svg>
+          </div>
+          <div class="legend">
+            <div><i style="background: #4a6741"></i>Ubicación ocupada</div>
+            <div><i style="background: #e8c547"></i>En manipulación</div>
+            <div><i style="background: #2f6db4"></i>Reservada</div>
+            <div><i style="background: #e24e1b"></i>Ruta de estiba</div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

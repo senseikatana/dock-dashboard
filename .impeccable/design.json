@@ -1,0 +1,585 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-24T14:43:41.822Z",
+  "title": "Design System: Panel OLA",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Cement Paper",
+        "purpose": "The app frame: sidebar and top bar share one continuous ground with no rule between them.",
+        "canonical": "#e8e4dc",
+        "tonalRamp": [
+          "#0c0b09",
+          "#272521",
+          "#44423c",
+          "#64615a",
+          "#85827b",
+          "#a8a59e",
+          "#ccc9c3",
+          "#f0eeea"
+        ]
+      },
+      "ground-deep": {
+        "role": "neutral",
+        "displayName": "Cement Paper Deep",
+        "purpose": "One step darker for blocks seated on the frame (shift card, active nav item) and for course rules.",
+        "canonical": "#ddd8ce",
+        "tonalRamp": [
+          "#0c0b08",
+          "#272520",
+          "#45423b",
+          "#656159",
+          "#868279",
+          "#a9a59c",
+          "#ccc9c2",
+          "#f1eee9"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Work Sheet",
+        "purpose": "The single white sheet all content lives on; default fill of controls.",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Sheet Lift",
+        "purpose": "The barely-there hover lift on rows and secondary buttons; fill of the reception form card.",
+        "canonical": "#faf9f6",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#252524",
+          "#434240",
+          "#62615f",
+          "#838280",
+          "#a6a5a2",
+          "#cac9c7",
+          "#efeeed"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Sheet Edge",
+        "purpose": "1px hairline edge of the sheet and cards.",
+        "canonical": "#eae7e0",
+        "tonalRamp": [
+          "#0c0b09",
+          "#262522",
+          "#44423d",
+          "#63615b",
+          "#85827c",
+          "#a7a59f",
+          "#cbc9c4",
+          "#f0eeea"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Row Rule",
+        "purpose": "Ordinary row rules inside tables and lists.",
+        "canonical": "#f1eee7",
+        "tonalRamp": [
+          "#0c0b09",
+          "#262522",
+          "#44423d",
+          "#63615b",
+          "#85827c",
+          "#a7a59f",
+          "#cbc9c4",
+          "#f0eeea"
+        ]
+      },
+      "rule-course": {
+        "role": "neutral",
+        "displayName": "Course Rule",
+        "purpose": "Heavier rule opening a new brick course at a dock change.",
+        "canonical": "#ddd8ce",
+        "tonalRamp": [
+          "#0c0b08",
+          "#272520",
+          "#45423b",
+          "#656159",
+          "#868279",
+          "#a9a59c",
+          "#ccc9c2",
+          "#f1eee9"
+        ]
+      },
+      "control": {
+        "role": "neutral",
+        "displayName": "Control Border",
+        "purpose": "Input, button and scrollbar borders; the dashed empty-slot border.",
+        "canonical": "#d1ccc2",
+        "tonalRamp": [
+          "#0c0b08",
+          "#272520",
+          "#45423b",
+          "#656158",
+          "#868279",
+          "#a9a59c",
+          "#ccc9c1",
+          "#f1eee9"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Warm Ink",
+        "purpose": "All primary text and the logo square.",
+        "canonical": "#2a2320",
+        "tonalRamp": [
+          "#0d0a09",
+          "#282422",
+          "#47403e",
+          "#675f5c",
+          "#89807d",
+          "#aba3a0",
+          "#cec7c4",
+          "#f2edeb"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "purpose": "Secondary text on white (5.8:1): labels, captions, table headers.",
+        "canonical": "#6c645c",
+        "tonalRamp": [
+          "#0d0b08",
+          "#282420",
+          "#47413b",
+          "#676058",
+          "#898178",
+          "#aba49c",
+          "#cec8c1",
+          "#f3ede8"
+        ]
+      },
+      "muted-on-ground": {
+        "role": "neutral",
+        "displayName": "Muted Ink on Frame",
+        "purpose": "Secondary text on the cement frame (5.8:1).",
+        "canonical": "#57504a",
+        "tonalRamp": [
+          "#0d0b09",
+          "#282421",
+          "#46413c",
+          "#67605a",
+          "#88817a",
+          "#aba49e",
+          "#cec8c3",
+          "#f2edea"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Signal Orange",
+        "purpose": "The only chroma: mark stroke, stamp outline, unknown shrinkage series, 2px focus ring. Never as text or fills.",
+        "canonical": "#d95d2b",
+        "tonalRamp": [
+          "#210000",
+          "#4c0500",
+          "#791c00",
+          "#a73600",
+          "#d15725",
+          "#f18258",
+          "#ffae8b",
+          "#ffdbc0"
+        ]
+      },
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "Signal Orange Ink",
+        "purpose": "The accent as small text on white (4.8:1): CONFORME stamp lettering, the main KPI figure.",
+        "canonical": "#a63d16",
+        "tonalRamp": [
+          "#1f0000",
+          "#480d00",
+          "#732404",
+          "#a03e1b",
+          "#c95e3b",
+          "#e98766",
+          "#ffb196",
+          "#ffddc8"
+        ]
+      },
+      "accent-strong": {
+        "role": "primary",
+        "displayName": "Signal Orange Action",
+        "purpose": "The contrast-safe step (5.3:1 with white) used as the one primary action fill.",
+        "canonical": "#c24a1a",
+        "tonalRamp": [
+          "#210000",
+          "#4b0600",
+          "#781d00",
+          "#a53703",
+          "#d0582c",
+          "#f0825c",
+          "#ffae8e",
+          "#ffdbc2"
+        ]
+      },
+      "positive-ink": {
+        "role": "status",
+        "displayName": "Olive Ink",
+        "purpose": "Positive status text (pill-ok).",
+        "canonical": "#2f4526",
+        "tonalRamp": [
+          "#060e04",
+          "#1c2917",
+          "#36482f",
+          "#53694a",
+          "#728b69",
+          "#96ad8e",
+          "#bdd0b5",
+          "#e5f4df"
+        ]
+      },
+      "positive-bg": {
+        "role": "status",
+        "displayName": "Olive Tint",
+        "purpose": "Positive status fill (pill-ok): operational machinery, known shrinkage.",
+        "canonical": "#e4ede0",
+        "tonalRamp": [
+          "#0a0c08",
+          "#222720",
+          "#3e443c",
+          "#5d6459",
+          "#7d857a",
+          "#a0a89d",
+          "#c5cbc2",
+          "#ebf0e9"
+        ]
+      },
+      "warning-ink": {
+        "role": "status",
+        "displayName": "Amber Ink",
+        "purpose": "Pending status text (pill-pendiente).",
+        "canonical": "#6b551b",
+        "tonalRamp": [
+          "#110a00",
+          "#2f2303",
+          "#504014",
+          "#735e2a",
+          "#968048",
+          "#b8a372",
+          "#d9c89e",
+          "#fbedce"
+        ]
+      },
+      "warning-bg": {
+        "role": "status",
+        "displayName": "Amber Tint",
+        "purpose": "Pending status fill (pill-pendiente): \"En validación\".",
+        "canonical": "#f5edd5",
+        "tonalRamp": [
+          "#0d0b05",
+          "#292519",
+          "#474232",
+          "#67614d",
+          "#89826d",
+          "#aba591",
+          "#cfc9b8",
+          "#f3eee1"
+        ]
+      },
+      "negative-ink": {
+        "role": "status",
+        "displayName": "Rust Ink",
+        "purpose": "Negative status text, NO CONFORME stamp, negative deltas.",
+        "canonical": "#832a17",
+        "tonalRamp": [
+          "#1d0200",
+          "#441207",
+          "#6e291a",
+          "#994431",
+          "#c1634f",
+          "#e28a77",
+          "#ffb4a2",
+          "#ffdfd1"
+        ]
+      },
+      "negative-bg": {
+        "role": "status",
+        "displayName": "Rust Tint",
+        "purpose": "Negative status fill (pill-incidencia).",
+        "canonical": "#f7e3dc",
+        "tonalRamp": [
+          "#0f0a08",
+          "#2c231f",
+          "#4b3f3a",
+          "#6d5d58",
+          "#907e78",
+          "#b1a19b",
+          "#d4c6c1",
+          "#f7ece8"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "title": {
+        "displayName": "Title",
+        "purpose": "The screen's single h1 (24px / 600, -0.02em). Drops to 20px under 640px."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Panel and rail headings (16px / 600, -0.01em)."
+      },
+      "kpi": {
+        "displayName": "KPI Figure",
+        "purpose": "KPI strip values in Barlow Condensed 26px / 600, tabular."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Table numbers, albarán codes, ubicaciones and rail figures in Barlow Condensed 15px / 600, tabular."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "General copy and KPI labels: Archivo 14px / 400, 1.45."
+      },
+      "small": {
+        "displayName": "Small / Label",
+        "purpose": "Table headers (12px regular muted, sentence case), captions and notes."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "stamp-land",
+        "value": "animation: stamp-land 260ms cubic-bezier(0.2, 0.9, 0.25, 1)",
+        "purpose": "The one authored moment: the CONFORME stamp landing on a freshly validated albarán row."
+      },
+      {
+        "name": "stamp-land-keyframes",
+        "value": "from { transform: rotate(-2deg) scale(1.35); opacity: 0 } to { transform: rotate(-2deg) scale(1); opacity: 1 }",
+        "purpose": "Scale-in from 1.35 to 1 at the stamp’s -2deg rest tilt."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "@media (prefers-reduced-motion: reduce) { .stamp-landing { animation: none } }",
+        "purpose": "The stamp appears at rest with no animation when the user asks for reduced motion."
+      },
+      {
+        "name": "state-transitions",
+        "value": "none (hover/focus/active are instant tone steps and outlines)",
+        "purpose": "The system defines no transitions outside the stamp; stillness is part of the world."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "frame-fold",
+        "value": "1100px",
+        "purpose": "The L-frame folds into a 48px top row + menu sheet; the sheet goes flush; KPI strip 2×2; work grid one column."
+      },
+      {
+        "name": "queue-two-line",
+        "value": "768px",
+        "purpose": "Queue table rows become two-line grid items (code · identity · status · action / transportista · líneas · ubicación)."
+      },
+      {
+        "name": "compression",
+        "value": "640px",
+        "purpose": "Form grid single column, h1 to 20px, panel heads wrap, tabs scroll in their own row."
+      }
+    ],
+    "radii": [
+      {
+        "name": "sheet",
+        "value": "16px",
+        "purpose": "The work sheet; top-left corner square where it butts the L."
+      },
+      {
+        "name": "card",
+        "value": "8px",
+        "purpose": "Cards and rail blocks, shift card, empty slot."
+      },
+      {
+        "name": "control",
+        "value": "6px",
+        "purpose": "Buttons, inputs, nav items, tabs, scrollbar thumb."
+      },
+      {
+        "name": "chip",
+        "value": "4px",
+        "purpose": "The stamp outline."
+      },
+      {
+        "name": "pill",
+        "value": "999px",
+        "purpose": "Status pills and the split bar."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one accent-filled action per screen; names the screen’s main task, right-aligned in the title row.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Registrar recepción</button>",
+      "css": ".ds-btn-primary { height: 36px; padding: 0 14px; border: 1px solid var(--accent-strong, #c24a1a); border-radius: var(--radius-control, 6px); background: var(--accent-strong, #c24a1a); color: #ffffff; font: 500 13px/1 'Archivo', system-ui, sans-serif; cursor: pointer; }\n.ds-btn-primary:hover { background: var(--accent-ink, #a63d16); border-color: var(--accent-ink, #a63d16); }\n.ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #d95d2b); outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined default action and its 28px inline row-action variant (\"Validar\").",
+      "html": "<button class=\"ds-btn\" type=\"button\">Cerrar formulario</button> <button class=\"ds-btn ds-btn-small\" type=\"button\">Validar</button>",
+      "css": ".ds-btn { height: 36px; padding: 0 14px; border: 1px solid var(--control, #d1ccc2); border-radius: var(--radius-control, 6px); background: var(--surface, #ffffff); color: var(--text, #2a2320); font: 500 13px/1 'Archivo', system-ui, sans-serif; cursor: pointer; }\n.ds-btn:hover { background: var(--raised, #faf9f6); }\n.ds-btn:focus-visible { outline: 2px solid var(--accent, #d95d2b); outline-offset: 2px; }\n.ds-btn-small { height: 28px; padding: 0 10px; font-size: 12px; }"
+    },
+    {
+      "name": "Status Stamp",
+      "kind": "custom",
+      "refersTo": "stamp",
+      "description": "The signature mark: a rubber stamp for conformity verdicts, tilted off-axis; CONFORME lands with the one authored animation.",
+      "html": "<span class=\"ds-stamp ds-stamp-landing\">Conforme</span> <span class=\"ds-stamp ds-stamp-no\">No conforme</span>",
+      "css": ".ds-stamp { display: inline-block; font: 600 13px/1.2 'Barlow Condensed', 'Archivo', sans-serif; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-ink, #a63d16); border: 2px solid var(--accent, #d95d2b); border-radius: var(--radius-chip, 4px); padding: 1px 8px 0; transform: rotate(-2deg); }\n.ds-stamp-no { color: var(--negative-ink, #832a17); border-color: var(--negative-ink, #832a17); transform: rotate(2deg); }\n.ds-stamp-landing { animation: ds-stamp-land 260ms cubic-bezier(0.2, 0.9, 0.25, 1); }\n@keyframes ds-stamp-land { from { transform: rotate(-2deg) scale(1.35); opacity: 0; } to { transform: rotate(-2deg) scale(1); opacity: 1; } }\n@media (prefers-reduced-motion: reduce) { .ds-stamp-landing { animation: none; } }"
+    },
+    {
+      "name": "Status Pill",
+      "kind": "chip",
+      "refersTo": "pill-ok",
+      "description": "Ordinary states as a same-hue tint + ink pair: olive (ok), amber (pending), rust (incident).",
+      "html": "<span class=\"ds-pill ds-pill-ok\">Operativa</span> <span class=\"ds-pill ds-pill-pendiente\">En validación</span> <span class=\"ds-pill ds-pill-incidencia\">Incidencia</span>",
+      "css": ".ds-pill { display: inline-block; font: 500 11.5px/1.2 'Archivo', system-ui, sans-serif; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }\n.ds-pill-ok { background: var(--positive-bg, #e4ede0); color: var(--positive-ink, #2f4526); }\n.ds-pill-pendiente { background: var(--warning-bg, #f5edd5); color: var(--warning-ink, #6b551b); }\n.ds-pill-incidencia { background: var(--negative-bg, #f7e3dc); color: var(--negative-ink, #832a17); }"
+    },
+    {
+      "name": "KPI Strip",
+      "kind": "card",
+      "refersTo": "kpi-cell",
+      "description": "One container split by hairlines into four cells; the screen’s main data figure takes the accent ink.",
+      "html": "<div class=\"ds-kpi-strip\">\n  <section class=\"ds-kpi\"><div class=\"ds-kpi-label\">Recepciones hoy</div><div class=\"ds-kpi-value\">7</div><div class=\"ds-kpi-note\">Muelles 1–7</div></section>\n  <section class=\"ds-kpi\"><div class=\"ds-kpi-label\">Conformidad</div><div class=\"ds-kpi-value\">92 %</div><div class=\"ds-kpi-note\">22 de 24 líneas conformes</div></section>\n  <section class=\"ds-kpi\"><div class=\"ds-kpi-label\">Mermas del mes</div><div class=\"ds-kpi-value ds-accent\">1.284 €</div><div class=\"ds-kpi-note\">412 € conocidas</div></section>\n  <section class=\"ds-kpi\"><div class=\"ds-kpi-label\">Maquinaria operativa</div><div class=\"ds-kpi-value\">11 <span class=\"ds-kpi-unit\">/ 12</span></div><div class=\"ds-kpi-note\">1 fuera de servicio</div></section>\n</div>",
+      "css": ".ds-kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--border, #eae7e0); border-radius: var(--radius-card, 8px); font-family: 'Archivo', system-ui, sans-serif; }\n.ds-kpi { padding: 14px 18px; border-left: 1px solid var(--rule, #f1eee7); }\n.ds-kpi:first-child { border-left: none; }\n.ds-kpi-label { font-size: 14px; color: var(--muted, #6c645c); }\n.ds-kpi-value { font: 600 26px/1.15 'Barlow Condensed', 'Archivo', sans-serif; font-variant-numeric: tabular-nums; margin-top: 2px; }\n.ds-kpi-value.ds-accent { color: var(--accent-ink, #a63d16); }\n.ds-kpi-unit { font: 500 15px 'Barlow Condensed', 'Archivo', sans-serif; color: var(--muted, #6c645c); margin-left: 4px; }\n.ds-kpi-note { font-size: 12px; color: var(--muted, #6c645c); margin-top: 3px; }"
+    },
+    {
+      "name": "Delivery-note Table (brick courses)",
+      "kind": "custom",
+      "refersTo": "table-row",
+      "description": "The workhorse: 44px rows on hairline rules, with a heavier course rule at each dock change and the stamp/pill as the row verdict.",
+      "html": "<table class=\"ds-table\">\n  <thead><tr><th>Albarán</th><th>Proveedor</th><th class=\"ds-col-num\">Líneas</th><th>Estado</th></tr></thead>\n  <tbody>\n    <tr><td class=\"ds-code\">ALB-2610-014</td><td class=\"ds-identity\">Cementos del Sur</td><td class=\"ds-col-num\">4</td><td><span class=\"ds-pill ds-pill-pendiente\">En validación</span></td></tr>\n    <tr><td class=\"ds-code\">ALB-2610-015</td><td class=\"ds-identity\">Aceros Peñalver</td><td class=\"ds-col-num\">2</td><td><span class=\"ds-stamp\">Conforme</span></td></tr>\n    <tr class=\"ds-course-start\"><td class=\"ds-code\">ALB-2610-016</td><td class=\"ds-identity\">Cerámica Vallés</td><td class=\"ds-col-num\">7</td><td><span class=\"ds-stamp ds-stamp-no\">No conforme</span></td></tr>\n  </tbody>\n</table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; font-family: 'Archivo', system-ui, sans-serif; color: var(--text, #2a2320); }\n.ds-table th { font-size: 12px; font-weight: 400; color: var(--muted, #6c645c); text-align: left; padding: 8px 12px; }\n.ds-table td { padding: 10px 12px; border-top: 1px solid var(--rule, #f1eee7); height: 44px; vertical-align: middle; font-size: 14px; }\n.ds-table tr.ds-course-start td { border-top: 1px solid var(--rule-course, #ddd8ce); }\n.ds-table tbody tr:hover td { background: var(--raised, #faf9f6); }\n.ds-col-num { text-align: right; width: 84px; font: 600 15px 'Barlow Condensed', 'Archivo', sans-serif; font-variant-numeric: tabular-nums; }\n.ds-code { font: 600 15px 'Barlow Condensed', 'Archivo', sans-serif; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; white-space: nowrap; }\n.ds-identity { font-weight: 500; max-width: 190px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n.ds-stamp { display: inline-block; font: 600 13px/1.2 'Barlow Condensed', 'Archivo', sans-serif; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-ink, #a63d16); border: 2px solid var(--accent, #d95d2b); border-radius: 4px; padding: 1px 8px 0; transform: rotate(-2deg); }\n.ds-stamp-no { color: var(--negative-ink, #832a17); border-color: var(--negative-ink, #832a17); transform: rotate(2deg); }\n.ds-pill { display: inline-block; font: 500 11.5px/1.2 'Archivo', system-ui, sans-serif; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }\n.ds-pill-pendiente { background: var(--warning-bg, #f5edd5); color: var(--warning-ink, #6b551b); }\n.ds-pill-ok { background: var(--positive-bg, #e4ede0); color: var(--positive-ink, #2f4526); }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "Top-bar search (32px) and form field (38px): white fill, control border, 6px radius, one global orange focus ring.",
+      "html": "<input class=\"ds-field\" type=\"search\" placeholder=\"Buscar albarán, proveedor o ubicación\" aria-label=\"Buscar albarán, proveedor o ubicación\">",
+      "css": ".ds-field { height: 32px; border: 1px solid var(--control, #d1ccc2); border-radius: var(--radius-control, 6px); background: var(--surface, #ffffff); padding: 0 12px; font: 400 13px 'Archivo', system-ui, sans-serif; color: var(--text, #2a2320); }\n.ds-field::placeholder { color: var(--muted, #6c645c); }\n.ds-field:focus-visible { outline: 2px solid var(--accent, #d95d2b); outline-offset: 2px; }"
+    },
+    {
+      "name": "Rail Card (merma split)",
+      "kind": "card",
+      "refersTo": "empty-slot",
+      "description": "Right-rail block: heading outside the card, split bar with the unknown share in the accent, figures beneath.",
+      "html": "<section class=\"ds-rail-block\">\n  <h3 class=\"ds-rail-head\">Mermas conocidas y desconocidas</h3>\n  <div class=\"ds-rail-card\">\n    <div class=\"ds-split-bar\" aria-hidden=\"true\"><div class=\"ds-known\" style=\"width: 32%\"></div><div class=\"ds-unknown\" style=\"width: 68%\"></div></div>\n    <div class=\"ds-split-figures\">\n      <div><div class=\"ds-split-label\">Conocidas</div><span class=\"ds-figure\">412 €</span><div class=\"ds-split-caption\">32 % del total</div></div>\n      <div><div class=\"ds-split-label\">Desconocidas</div><span class=\"ds-figure ds-figure-accent\">872 €</span><div class=\"ds-split-caption\">68 % del total</div></div>\n    </div>\n  </div>\n</section>",
+      "css": ".ds-rail-block { font-family: 'Archivo', system-ui, sans-serif; color: var(--text, #2a2320); }\n.ds-rail-head { margin: 0 0 8px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }\n.ds-rail-card { border: 1px solid var(--border, #eae7e0); border-radius: var(--radius-card, 8px); padding: 16px; }\n.ds-split-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; margin-bottom: 12px; }\n.ds-split-bar .ds-known { background: #8c8378; }\n.ds-split-bar .ds-unknown { background: var(--accent, #d95d2b); }\n.ds-split-figures { display: flex; justify-content: space-between; gap: 12px; }\n.ds-split-label { font-size: 13px; font-weight: 500; }\n.ds-figure { display: block; font: 600 21px 'Barlow Condensed', 'Archivo', sans-serif; font-variant-numeric: tabular-nums; }\n.ds-figure-accent { color: var(--accent-ink, #a63d16); }\n.ds-split-caption { font-size: 12px; color: var(--muted, #6c645c); margin-top: 2px; }"
+    },
+    {
+      "name": "Empty Slot",
+      "kind": "custom",
+      "refersTo": "empty-slot",
+      "description": "The shared loading and empty container: a dashed slot with words in it — never a spinner or illustration.",
+      "html": "<div class=\"ds-empty-slot\">Sin mermas registradas este mes.</div>",
+      "css": ".ds-empty-slot { border: 1px dashed var(--control, #d1ccc2); border-radius: var(--radius-card, 8px); padding: 14px 16px; font: 400 13px 'Archivo', system-ui, sans-serif; color: var(--muted, #6c645c); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Materia de obra",
+    "overview": "The panel reads as the material it handles. A cement-paper L-frame (#E8E4DC) holds exactly one white work sheet; everything the worker reads sits on that sheet like a delivery note on a desk. The palette is the palette of the warehouse itself: kraft paper, cement grey, warm ink, and one signal orange that behaves like a safety marking — rare, functional, impossible to miss. Dense tables are laid in brick courses (tongadas) on a 44px ceramic module pitch, so scanning a queue feels like reading a wall of labeled bays. When a reception is validated, a rubber stamp lands on the row: CONFORME, tilted, slightly out of register — the one authored moment in an otherwise still, operational interface.\n\nThis world refuses the neutral card kit where every block floats on grey behind an icon in a tinted square. It is flat by doctrine: depth comes from a single tone step (frame vs. sheet, row vs. hover) and hairline rules, never from shadows. Density is medium-high and deliberate — 44px rows, 24px gutters, tabular figures — because the worker lives in this screen across a full shift and scansability beats expression. The status language is material too: verdicts are stamped, states are tinted chips in olive, amber and rust, and every number is set in a condensed industrial face that reads as measured quantity.",
+    "keyCharacteristics": [
+      "One tinted L-frame, one white work sheet — maximum three nesting levels (frame, sheet, card).",
+      "One chroma only: signal orange on the mark, the single primary action and the main data figure/series.",
+      "Status as material: rubber stamps for verdicts, pale-tint pills for states (olive / amber / rust on their own hue’s tint).",
+      "Two faces with one job each: Archivo for prose, Barlow Condensed for every figure, code and ubicación.",
+      "Flat, shadowless depth; brick-course table rules at every dock change; 44px module pitch."
+    ],
+    "rules": [
+      {
+        "name": "The One Chroma Rule",
+        "body": "Signal Orange is the only chroma in the system. It marks the brand, the single primary action and the one data figure that is the problem to act on. Its rarity is the point; a second hue (a blue, a violet, a green action) breaks the world.",
+        "section": "colors"
+      },
+      {
+        "name": "The Contrast-Safe Step Rule",
+        "body": "The accent steps down before it touches type or fills: #C24A1A under white button text (5.3:1), #A63D16 for small text on white (4.8:1). The raw #D95D2B appears only as 2px borders, the mark stroke and data bars — never as text.",
+        "section": "colors"
+      },
+      {
+        "name": "The Same-Hue Status Rule",
+        "body": "Status = pale tint + dark ink of one hue (olive, amber, rust). Never a saturated chip, never a colored dot alone, never hue-as-decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Figure Face Rule",
+        "body": "Every figure, code and ubicación is Barlow Condensed with font-variant-numeric: tabular-nums (the .num utility). Archivo never sets a number in a data context; Barlow Condensed never sets a sentence.",
+        "section": "typography"
+      },
+      {
+        "name": "The Quiet Header Rule",
+        "body": "Table headers are 12px regular muted with no fill and no rule — the data, not the chrome, carries the emphasis.",
+        "section": "typography"
+      },
+      {
+        "name": "The Course Rule",
+        "body": "Long tables are laid like brick courses: 44px rows, a hairline --rule between rows of one course, and the heavier --rule-course where a new course starts (dock change). The courses are the table’s structure — don’t zebra-stripe over them.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Frame Rule",
+        "body": "Surfaces are flat at rest and flat in response. Hover is a tone step (--raised), focus is a 2px outline, elevation is nesting. Never a shadow, glow, blur or gradient — including under the sheet.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Radius Encodes Rank Rule",
+        "body": "Radius follows nesting depth: 16 sheet, 8 card, 6 control, 4 chip. A card may not wear the sheet’s radius, and no fourth nesting level exists to need a fifth step.",
+        "section": "shapes"
+      },
+      {
+        "name": "The One Primary Rule",
+        "body": "Exactly one accent-filled action per screen, right-aligned in the title row, naming the screen’s main task. A second #C24A1A button means one of them is wrong.",
+        "section": "components"
+      },
+      {
+        "name": "The Stamp Rule",
+        "body": "The rubber stamp is reserved for conformity verdicts and is the only element allowed to rotate, letter-space, or animate. Its -2deg / +2deg tilt and its landing are the world’s signature — spending them elsewhere spends the signature.",
+        "section": "components"
+      },
+      {
+        "name": "The Dashed Slot Rule",
+        "body": "Loading and empty share one dashed slot with words in it. No spinners, no skeletons, no empty-state illustrations.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do keep the accent as the only chroma: mark, one primary action, main data figure/series (#D95D2B and its #C24A1A / #A63D16 steps).",
+      "Do set every number, code and ubicación in Barlow Condensed with tabular figures, right-aligned in tables.",
+      "Do lay long tables in brick courses: --row-height: 44px rows, --rule within a course, --rule-course at each dock change.",
+      "Do express status as stamp (verdict) or same-hue tint pill (state): olive #2F4526/#E4EDE0, amber #6B551B/#F5EDD5, rust #832A17/#F7E3DC.",
+      "Do convey depth with tone steps and hairlines (--raised hover, --ground-deep seated blocks, #EAE7E0 edges).",
+      "Do hold the gutter discipline: 24px padding and gaps everywhere on the sheet; the KPI strip’s cells split by hairlines, not gaps.",
+      "Do honor prefers-reduced-motion on the stamp."
+    ],
+    "donts": [
+      "Don’t add a second hue — no blue links, no green confirmations, no violet charts. Color is orange or it is ink.",
+      "Don’t use shadows, glows, blurs or gradients anywhere, including under the sheet.",
+      "Don’t put a border between the sidebar and the top bar; the L is one continuous ground (the folded state’s bottom rule at 1100px is the one exception).",
+      "Don’t nest a fourth level beyond frame → sheet → card, and don’t let a card wear the sheet’s 16px radius.",
+      "Don’t rotate, stamp or animate anything that is not a conformity verdict.",
+      "Don’t fill table headers, add zebra striping, or drop the course rules — the brick courses are the table’s structure.",
+      "Don’t use icon glyphs in tinted squares as decoration; navigation and status are words (the logo mark is the only glyph in the system).",
+      "Don’t set figures in Archivo or prose in Barlow Condensed.",
+      "Don’t render empty or loading states as spinners, skeletons or illustrations — use the dashed slot with words.",
+      "Don’t give a screen two primary actions or different gutters for adjacent rows (24px everywhere)."
+    ]
+  }
+}

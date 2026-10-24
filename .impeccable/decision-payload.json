@@ -1,0 +1,181 @@
+{
+  "title": "Elige el mundo visual",
+  "question": "El roll asignó «Materia de obra». Quédate con él, toma una alternativa o vuelve a repartir.",
+  "options": [
+    {
+      "id": "materia-obra",
+      "kind": "assigned",
+      "label": "Materia de obra",
+      "kicker": "THE ROLL",
+      "lineage": "saco de kraft, tongada de ladrillo y módulo de baldosa",
+      "thesis": "El panel se lee como el material que se maneja: papel kraft, tongadas y retícula de baldosa.",
+      "palette": ["#8C6A4E", "#B9B4AC", "#E8E4DC", "#D95D2B"],
+      "materials": [
+        "papel kraft impreso",
+        "aparejo de ladrillo",
+        "módulo cerámico"
+      ],
+      "viewport": "Shell estándar sobre fondo de cemento; las filas de albaranes se agrupan en tongadas y la retícula de baldosa mide la densidad.",
+      "risk": "Sin movimiento propio el mundo se queda en color de fondo, y el crema con terracota es justo el default que hay que evitar.",
+      "raised": [
+        {
+          "from": "challenger-annual",
+          "raise": "El sello de conformidad (CONFORME / NO CONFORME) entra como ancla de estado en la ficha de recepción."
+        },
+        {
+          "from": "challenger-catalogo",
+          "raise": "El código y su posición física son la misma navegación: cada fila enlaza con su ubicación 03-A-12."
+        },
+        {
+          "from": "challenger-crouwel",
+          "raise": "La retícula del módulo de baldosa se hace visible como armazón de las tablas densas."
+        }
+      ],
+      "comp": ".impeccable/mocks/decision/materia-obra.webp",
+      "html": ".impeccable/mocks/decision/materia-obra.html"
+    },
+    {
+      "id": "albaran-sellado",
+      "kind": "pick",
+      "label": "Albarán sellado",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "albarán de entrega con copia de carbónico y sello de goma",
+      "thesis": "Cada recepción es un documento que se sella: la ficha de albarán gobierna la pantalla.",
+      "palette": ["#F5F2EA", "#1F2933", "#C0392B", "#6B7280"],
+      "materials": [
+        "papel de formulario",
+        "tinta de carbónico",
+        "sello de goma"
+      ],
+      "viewport": "La ficha del albarán en curso ocupa el centro, con su sello de conformidad y las líneas de artículo debajo.",
+      "risk": "Es la metáfora más obvia del oficio: es donde aterriza casi todo proyecto de logística.",
+      "comp": ".impeccable/mocks/decision/albaran-sellado.webp",
+      "html": ".impeccable/mocks/decision/albaran-sellado.html"
+    },
+    {
+      "id": "challenger-terreno",
+      "kind": "challenger",
+      "catalogId": "notation-diagram-systems-orienteering-map",
+      "label": "Terreno de almacén",
+      "verdict": "wins",
+      "lineage": "mapa de orientación ISO con la etapa activa sobre el terreno",
+      "thesis": "El suelo del almacén es terreno codificado y la ruta del día es la etapa que lo recorre.",
+      "palette": ["#FAFAF7", "#4A6741", "#E8C547", "#2F6DB4", "#E24E1B"],
+      "materials": [
+        "tintas de mapa codificadas",
+        "curvas de nivel como pasillos",
+        "capa de ruta reservada"
+      ],
+      "viewport": "Shell estándar; a la derecha el plano del almacén con la ruta de estiba del día en color de señal y su leyenda como tabla.",
+      "case": "Funde bien: gana en identificación (su planta, sus muelles) y en claridad (el mapa hace trabajo real de ubicación, no adorno).",
+      "risk": "Si el mapa deja de ubicar mercancía real se convierte en cartografía decorativa.",
+      "comp": ".impeccable/mocks/decision/challenger-terreno.webp",
+      "html": ".impeccable/mocks/decision/challenger-terreno.html",
+      "hero": "https://impeccable.style/worlds/cards/notation-diagram-systems-orienteering-map-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/notation-diagram-systems-orienteering-map.webp"
+    },
+    {
+      "id": "challenger-annual",
+      "kind": "challenger",
+      "catalogId": "design-annual-s-plate-section",
+      "label": "Pliego de anuario",
+      "verdict": "declined",
+      "lineage": "sección de láminas de un anuario de diseño",
+      "palette": ["#F5F4F6", "#16181A", "#DCDDF3"],
+      "materials": [
+        "cruces de registro",
+        "hairlines de crédito",
+        "sello tipográfico"
+      ],
+      "thesis": "La recepción como pliego impreso: cruces de registro y sello de atribución.",
+      "case": "Funde mal: la identificación con el oficio no pasa por la precisión editorial.",
+      "kept": "El sello circular de atribución, traducido a sello de conformidad.",
+      "risk": "Costura editorial en una pantalla de trabajo.",
+      "hero": "https://impeccable.style/worlds/cards/design-annual-s-plate-section-hero.webp"
+    },
+    {
+      "id": "challenger-catalogo",
+      "kind": "challenger",
+      "catalogId": "pop-culture-shelf-doujin-event-catalog",
+      "label": "Catálogo de stands",
+      "verdict": "declined",
+      "lineage": "catálogo impreso de convención en cuadrícula numerada",
+      "palette": ["#EDE8DC", "#1A1A1A", "#C0392B"],
+      "materials": [
+        "papel de periódico",
+        "cuadrícula numerada",
+        "marcado a mano"
+      ],
+      "thesis": "La recepción como cuadrícula densa de casillas, marcada a mano según se procesa.",
+      "case": "Funde mal: el papel de periódico y el marcado manual son traje, no oficio.",
+      "kept": "El índice y la posición física son el mismo espacio: se navega por código y por sitio.",
+      "risk": "Densidad sin jerarquía.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-doujin-event-catalog-hero.webp"
+    },
+    {
+      "id": "challenger-crouwel",
+      "kind": "challenger",
+      "catalogId": "crouwel-grid-specimen",
+      "label": "Retícula de muestra",
+      "verdict": "declined",
+      "lineage": "cartel de muestra tipográfica de retícula visible",
+      "palette": ["#FFFFFF", "#111111", "#2B4EFF"],
+      "materials": ["retícula de construcción", "trazo modular"],
+      "thesis": "La retícula de baldosa como armazón literal de todo el panel.",
+      "case": "Funde mal: la retícula como espectáculo no ayuda a trabajar.",
+      "kept": "La retícula de módulo se mantiene como medida honesta de la densidad.",
+      "risk": "Convertir la estructura en ornamento.",
+      "hero": "https://impeccable.style/worlds/cards/crouwel-grid-specimen-hero.webp"
+    },
+    {
+      "id": "challenger-fac",
+      "kind": "challenger",
+      "catalogId": "brand-identity-canon-saville-catalog-sleeve",
+      "label": "Catálogo industrial",
+      "verdict": "declined",
+      "lineage": "identidad de catálogo industrial con códigos de color",
+      "palette": ["#111111", "#FFFFFF", "#E8C547"],
+      "materials": ["código de color industrial", "numeración de catálogo"],
+      "thesis": "Todo objeto lleva su código y el color industrial sustituye a las palabras.",
+      "case": "Funde a medias: los códigos hablan al almacén, pero el color sin texto rompe la claridad.",
+      "kept": "Identidad por código: cada fila arranca con su referencia en cifras tabulares.",
+      "risk": "Decodificar en hover lo que debería leerse de una.",
+      "hero": "https://impeccable.style/worlds/cards/brand-identity-canon-saville-catalog-sleeve-hero.webp"
+    },
+    {
+      "id": "challenger-ikeda",
+      "kind": "challenger",
+      "catalogId": "ikeda-datamatics",
+      "label": "Campo de datos",
+      "verdict": "declined",
+      "lineage": "instalación de datos en blanco y negro puro",
+      "palette": ["#000000", "#FFFFFF"],
+      "materials": ["columnas de código de barras", "retícula sinusoidal"],
+      "thesis": "El registro de escaneos como campo de código de barras en blanco y negro puro.",
+      "case": "Funde mal: la abstracción de datos impide trabajar con ella.",
+      "kept": "El ritmo de código de barras queda solo en el registro de escaneos; una sola gráfica manda la pantalla.",
+      "risk": "Arte de datos donde hay que operar.",
+      "hero": "https://impeccable.style/worlds/cards/ikeda-datamatics-hero.webp"
+    }
+  ],
+  "reroll": {
+    "registers": ["safer", "bolder"]
+  },
+  "buildPath": {
+    "value": "code",
+    "toggle": true
+  },
+  "canon": true,
+  "canonCard": {
+    "kind": "canon",
+    "label": "El estándar de la categoría",
+    "thesis": "Lo que esta categoría entrega, ejecutado con precisión.",
+    "palette": ["#F8F8F8", "#111827", "#2563EB"],
+    "materials": ["cuadrícula limpia", "tarjetas KPI"],
+    "viewport": "La disposición que el usuario espera, con todo el oficio encima.",
+    "risk": "Indistinguible de la competencia por diseño.",
+    "comp": ".impeccable/mocks/decision/canon.webp",
+    "html": ".impeccable/mocks/decision/canon.html"
+  },
+  "steer": true
+}

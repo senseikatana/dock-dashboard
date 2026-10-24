@@ -1,0 +1,59 @@
+/*
+ * Panel OLA — tokens (direction: "Materia de obra").
+ * One cement-paper frame holding one white work sheet; warm ink;
+ * signal orange as the only chroma; figures set in Barlow Condensed.
+ * Downstream styles reference tokens only.
+ */
+:root {
+  /* surfaces */
+  --ground: #e8e4dc; /* cement-paper frame */
+  --ground-deep: #ddd8ce; /* one step darker: shift card, active nav, tabs */
+  --surface: #ffffff; /* the work sheet */
+  --raised: #faf9f6;
+  --border: #eae7e0; /* sheet edge and card edges */
+  --rule: #f1eee7; /* row rules */
+  --rule-course: #ddd8ce; /* brick-course rules between dock groups */
+  --control: #d1ccc2; /* control borders, one step darker */
+
+  /* ink */
+  --text: #2a2320;
+  --muted: #6c645c; /* secondary on white, 5.8:1 */
+  --muted-on-ground: #57504a; /* secondary on the frame, 5.8:1 */
+
+  /* the one chroma */
+  --accent: #d95d2b;
+  --accent-ink: #a63d16; /* accent as small text on white, 4.8:1 */
+  --accent-strong: #c24a1a; /* signal orange for the primary action, 5.3:1 with white */
+  --primary-fill: #2a2320;
+  --primary-ink: #f7f4ee;
+
+  /* status pairs: pale tint, dark ink of the same hue */
+  --positive-ink: #2f4526;
+  --positive-bg: #e4ede0;
+  --warning-ink: #6b551b;
+  --warning-bg: #f5edd5;
+  --negative-ink: #832a17;
+  --negative-bg: #f7e3dc;
+
+  /* type */
+  --font-text: "Archivo", system-ui, sans-serif;
+  --font-figures: "Barlow Condensed", "Archivo", sans-serif;
+  --fs-title: 24px;
+  --fs-section: 16px;
+  --fs-kpi: 26px;
+  --fs-body: 14px;
+  --fs-small: 12px;
+
+  /* geometry */
+  --radius-sheet: 16px;
+  --radius-card: 8px;
+  --radius-control: 6px;
+  --radius-chip: 4px;
+  --sheet-inset: 8px;
+  --sidebar-width: 216px;
+  --topbar-height: 48px;
+  --rail-width: 286px;
+  --pad: 24px;
+  --gap: 24px;
+  --row-height: 44px; /* the ceramic module pitch */
+}

@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Panel OLA · Cuadro de mando</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1440px;
+        height: 900px;
+        overflow: hidden;
+      }
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+        background: #f8f8f8;
+        color: #111827;
+        font-size: 14px;
+        line-height: 1.45;
+        -webkit-font-smoothing: antialiased;
+      }
+      .app {
+        display: flex;
+        width: 1440px;
+        height: 900px;
+      }
+      /* Sidebar */
+      .sidebar {
+        width: 240px;
+        height: 900px;
+        background: #ffffff;
+        border-right: 1px solid #e5e7eb;
+        padding: 24px 16px;
+        display: flex;
+        flex-direction: column;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 8px;
+        margin-bottom: 28px;
+      }
+      .brand-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: #2563eb;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .brand-name {
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .nav a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 8px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+        text-decoration: none;
+      }
+      .nav a.active {
+        background: #eff6ff;
+        color: #2563eb;
+        font-weight: 600;
+      }
+      .nav .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 2px;
+        background: #d1d5db;
+      }
+      .nav a.active .dot {
+        background: #2563eb;
+      }
+      .user {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 8px 0;
+        border-top: 1px solid #f3f4f6;
+      }
+      .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        color: #374151;
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .user .name {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .user .sub {
+        font-size: 12px;
+        color: #6b7280;
+      }
+
+      /* Main */
+      .main {
+        width: 1200px;
+        height: 900px;
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+      }
+      .page-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 40px;
+        margin-bottom: 24px;
+      }
+      h1 {
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 36px;
+        padding: 0 16px;
+        background: #2563eb;
+        color: #ffffff;
+        border: 0;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn .plus {
+        font-size: 16px;
+        line-height: 1;
+        font-weight: 400;
+      }
+
+      /* KPIs */
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .kpi {
+        height: 108px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .kpi .label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #6b7280;
+      }
+      .kpi .value {
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+      }
+      .kpi .meta {
+        font-size: 12px;
+        color: #6b7280;
+      }
+
+      /* Cards */
+      .card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .card-head h2 {
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .card-head .note {
+        font-size: 13px;
+        color: #6b7280;
+      }
+      .card-head .link {
+        font-size: 13px;
+        font-weight: 500;
+        color: #2563eb;
+        text-decoration: none;
+      }
+      .chart {
+        height: 228px;
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 24px;
+      }
+      .plot {
+        flex: 1;
+        display: flex;
+        align-items: flex-end;
+        gap: 14px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .bar {
+        flex: 1;
+        background: #2563eb;
+        border-radius: 3px 3px 0 0;
+      }
+      .h1 {
+        height: 44%;
+      }
+      .h2 {
+        height: 62%;
+      }
+      .h3 {
+        height: 52%;
+      }
+      .h4 {
+        height: 74%;
+      }
+      .h5 {
+        height: 58%;
+      }
+      .h6 {
+        height: 48%;
+      }
+      .h7 {
+        height: 66%;
+      }
+      .h8 {
+        height: 80%;
+      }
+      .h9 {
+        height: 60%;
+      }
+      .h10 {
+        height: 72%;
+      }
+      .h11 {
+        height: 54%;
+      }
+      .h12 {
+        height: 86%;
+      }
+      .h13 {
+        height: 64%;
+      }
+      .h14 {
+        height: 70%;
+      }
+      .axis {
+        display: flex;
+        gap: 14px;
+        margin-top: 8px;
+      }
+      .axis span {
+        flex: 1;
+        text-align: center;
+        font-size: 11px;
+        color: #6b7280;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Table */
+      .table-card {
+        flex: 1;
+        padding: 20px 24px 12px;
+        display: flex;
+        flex-direction: column;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7280;
+        text-align: left;
+        padding: 10px 8px;
+        border-bottom: 1px solid #e5e7eb;
+        white-space: nowrap;
+      }
+      td {
+        font-size: 14px;
+        padding: 20px 8px;
+        border-bottom: 1px solid #f3f4f6;
+        white-space: nowrap;
+      }
+      th:first-child,
+      td:first-child {
+        padding-left: 0;
+      }
+      th:last-child,
+      td:last-child {
+        padding-right: 0;
+      }
+      .num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .alb {
+        font-size: 14px;
+        font-weight: 500;
+        color: #2563eb;
+        text-decoration: none;
+      }
+      .muted {
+        color: #6b7280;
+      }
+      .pill {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .p-wait {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .p-ok {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .p-alert {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .table-foot {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 12px;
+        font-size: 12px;
+        color: #6b7280;
+      }
+      .table-foot a {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">OL</div>
+          <div class="brand-name">Panel OLA</div>
+        </div>
+        <nav class="nav">
+          <a class="active" href="#"
+            ><span class="dot"></span>Cuadro de mando</a
+          >
+          <a href="#"><span class="dot"></span>Recepción</a>
+          <a href="#"><span class="dot"></span>Incidencias y mermas</a>
+          <a href="#"><span class="dot"></span>Maquinaria</a>
+          <a href="#"><span class="dot"></span>Residuos</a>
+          <a href="#"><span class="dot"></span>Gastos</a>
+        </nav>
+        <div class="user">
+          <div class="avatar">JM</div>
+          <div>
+            <div class="name">J. Martín</div>
+            <div class="sub">Almacén Central</div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="page-head">
+          <h1>Cuadro de mando</h1>
+          <button class="btn">
+            <span class="plus">+</span>Registrar recepción
+          </button>
+        </div>
+
+        <section class="kpis">
+          <div class="kpi">
+            <div class="label">Recepciones hoy</div>
+            <div class="value">14</div>
+            <div class="meta">+2 frente a ayer</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Conformidad</div>
+            <div class="value">96,4%</div>
+            <div class="meta">+0,8 pp este mes</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Mermas del mes</div>
+            <div class="value">1.240 €</div>
+            <div class="meta">−310 € vs. septiembre</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Maquinaria operativa</div>
+            <div class="value">8/9</div>
+            <div class="meta">Excavadora 07 en taller</div>
+          </div>
+        </section>
+
+        <section class="card chart">
+          <div class="card-head">
+            <h2>Recepciones por día</h2>
+            <div class="note">Últimos 14 días · almacén central</div>
+          </div>
+          <div class="plot">
+            <div class="bar h1"></div>
+            <div class="bar h2"></div>
+            <div class="bar h3"></div>
+            <div class="bar h4"></div>
+            <div class="bar h5"></div>
+            <div class="bar h6"></div>
+            <div class="bar h7"></div>
+            <div class="bar h8"></div>
+            <div class="bar h9"></div>
+            <div class="bar h10"></div>
+            <div class="bar h11"></div>
+            <div class="bar h12"></div>
+            <div class="bar h13"></div>
+            <div class="bar h14"></div>
+          </div>
+          <div class="axis">
+            <span>11</span><span>12</span><span>13</span><span>14</span
+            ><span>15</span><span>16</span><span>17</span> <span>18</span
+            ><span>19</span><span>20</span><span>21</span><span>22</span
+            ><span>23</span><span>24</span>
+          </div>
+        </section>
+
+        <section class="card table-card">
+          <div class="card-head">
+            <h2>Albaranes pendientes de validar</h2>
+            <a class="link" href="#">Ver todos</a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Albarán</th>
+                <th>Proveedor</th>
+                <th>Transportista</th>
+                <th class="num">Bultos</th>
+                <th>Ubicación</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a class="alb" href="#">ALB-2026-0412</a></td>
+                <td>Cerámicas del Ebro</td>
+                <td class="muted">Transportes Ebro S.L.</td>
+                <td class="num">24 palets</td>
+                <td>03-A-12</td>
+                <td><span class="pill p-wait">En validación</span></td>
+              </tr>
+              <tr>
+                <td><a class="alb" href="#">ALB-2026-0413</a></td>
+                <td>Pladur Ibérica</td>
+                <td class="muted">FrigoTrans Norte</td>
+                <td class="num">12 bultos</td>
+                <td>05-C-04</td>
+                <td><span class="pill p-ok">Conforme</span></td>
+              </tr>
+              <tr>
+                <td><a class="alb" href="#">ALB-2026-0414</a></td>
+                <td>Cementos del Norte</td>
+                <td class="muted">Grúas Vega</td>
+                <td class="num">18 palets</td>
+                <td>02-B-07</td>
+                <td><span class="pill p-alert">Incidencia</span></td>
+              </tr>
+              <tr>
+                <td><a class="alb" href="#">ALB-2026-0415</a></td>
+                <td>Maderas Duero</td>
+                <td class="muted">Duero Logística</td>
+                <td class="num">9 bultos</td>
+                <td>06-A-01</td>
+                <td><span class="pill p-ok">Conforme</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="table-foot">
+            <span>Mostrando 4 de 23 albaranes · Actualizado hace 2 min</span>
+            <a href="#">Exportar a CSV</a>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
