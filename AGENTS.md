@@ -45,11 +45,13 @@ Order before commit: `bun run lint` → `bun check` → `bun run test`.
 
 `DESIGN.md` is the source of truth. Non-negotiables:
 
-- One chroma only (Signal Orange); no shadows/glows/gradients.
-- Radius by rank: sheet 16 → card 8 → control 6 → chip 4.
+- One chroma only (Signal Orange); no shadows/glows/gradients. The sidebar account popover is the one exception: soft shadow + icons, Nuxt UI-style.
+- Radius by rank: sheet 16 → card 8 → control 6 → chip 4; the account popover uses 2px to match the Nuxt UI reference.
 - Figures in Barlow Condensed with tabular nums; prose in Archivo.
 - Status = rubber stamp (verdict) or same-hue tinted pill (state).
 - One primary action per screen; loading/empty = dashed slot with words.
+- Navigation lives in the sidebar account dropdown (Personal / Operaciones / Administración), not as separate rail links. Mobile keeps a bottom nav with the four personal routes.
+- Theme selector: light / dark / system, persisted in `localStorage` (`dock:theme`), applied via `data-theme` on `<html>`; dark tokens live in `tokens.css`. Do not change the orange/cement identity when touching themes.
 - UI copy is Spanish (es-ES).
 
 ## Firebase / Cloudflare Deploy
