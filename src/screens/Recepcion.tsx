@@ -5,6 +5,7 @@ import { KpiStrip } from "../components/KpiStrip";
 import { MermaRail, type OpenDifference } from "../components/MermaRail";
 import type { ShiftData, WarehouseRepository } from "../data/repository";
 import type { DeliveryNote, NoteStatus } from "../domain/reception";
+import { localDateIso } from "../domain/date";
 import { MAX_DOCKS } from "../domain/reception";
 import {
   checkNote,
@@ -255,7 +256,7 @@ function ReceptionForm({
             name="date"
             type="date"
             required
-            defaultValue={new Date().toISOString().slice(0, 10)}
+            defaultValue={localDateIso()}
           />
         </label>
         <label>

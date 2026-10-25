@@ -18,6 +18,7 @@ import type { Expense, WasteRecord } from "../domain/operations";
 import type { Member } from "../domain/members";
 import type { Payslip, ShiftKind, TimeEntry } from "../domain/workday";
 import { checkNote } from "../domain/reception";
+import { localDateIso } from "../domain/date";
 import { buildSeed } from "./seed";
 
 const NOTE_COLLECTION = "albaranes";
@@ -205,7 +206,7 @@ export class FirebaseWarehouseRepository implements WarehouseRepository {
     const entry: TimeEntry = {
       id: `FIC-${crypto.randomUUID()}`,
       memberId,
-      date: now.toISOString().slice(0, 10),
+      date: localDateIso(now),
       shift,
       clockIn: now.toISOString(),
       clockOut: null,

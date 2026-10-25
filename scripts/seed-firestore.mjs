@@ -5,8 +5,9 @@ import { initializeApp, getApps } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 import { buildSeed } from "../src/data/seed";
+import { localDateIso } from "../src/domain/date";
 
-const today = new Date().toISOString().slice(0, 10);
+const today = localDateIso();
 const {
   notes,
   shrinkageEvents,

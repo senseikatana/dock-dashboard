@@ -8,6 +8,7 @@ import {
 import type { Expense, WasteRecord } from "../domain/operations";
 import type { Member } from "../domain/members";
 import type { Payslip, ShiftKind, TimeEntry } from "../domain/workday";
+import { localDateIso } from "../domain/date";
 import type { ShiftData, WarehouseRepository } from "./repository";
 import type { SeedData } from "./seed";
 
@@ -195,7 +196,7 @@ export class MemoryWarehouseRepository implements WarehouseRepository {
     const entry: TimeEntry = {
       id: `FIC-${crypto.randomUUID()}`,
       memberId,
-      date: now.toISOString().slice(0, 10),
+      date: localDateIso(now),
       shift,
       clockIn: now.toISOString(),
       clockOut: null,

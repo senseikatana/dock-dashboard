@@ -17,8 +17,11 @@ import { Recepcion } from "./screens/Recepcion";
 import { Residuos } from "./screens/Residuos";
 import { SignIn } from "./screens/SignIn";
 import { Timesheet } from "./screens/Timesheet";
+import { localDateIso } from "./domain/date";
 
-const today = new Date().toISOString().slice(0, 10);
+// Fecha civil LOCAL (no UTC): con turno "noche", toISOString() anotaría el
+// fichaje en el día anterior entre las 00:00 y las 02:00 de España.
+const today = localDateIso();
 
 const LazyCuadroDeMando = lazy(() =>
   import("./screens/CuadroDeMando").then((module) => ({

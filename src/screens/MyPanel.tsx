@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import type { WarehouseRepository } from "../data/repository";
 import { MEMBER_DEPARTMENT_COPY, MEMBER_ROLE_COPY } from "../domain/members";
+import { localDateIso } from "../domain/date";
 import { formatEur } from "../domain/format";
 import {
   formatHours,
@@ -50,7 +51,7 @@ export function MyPanel({ repository }: { repository: WarehouseRepository }) {
 
   if (!member) return null;
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDateIso();
   const active = entries.find((entry) => entry.clockOut === null);
   const week = isoWeek(new Date());
   const weekEntries = entries.filter(
