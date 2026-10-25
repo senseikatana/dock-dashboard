@@ -29,7 +29,16 @@ export interface ShiftData {
  * - `update*` rechaza si el id no existe (Firestore `updateDoc` falla).
  */
 export interface WarehouseRepository {
-  // Read
+  /**
+   * Devuelve TODOS los registros de las cinco colecciones operativas; no
+   * filtra por `today` (los adaptadores lo ignoran, `today` queda como
+   * argumento de cara a un recorte futuro).
+   *
+   * No se filtra porque `machines` ni siquiera tiene campo `date`, y
+   * Gastos —vista de mes— y Recepción —histórico— necesitan el conjunto
+   * completo. Quien necesita un recorte por fecha lo hace en cliente: el
+   * cuadro de mando calcula su "hoy" con `entry.date === today`.
+   */
   loadShift(today: string): Promise<ShiftData>;
 
   // Delivery notes (albaranes)

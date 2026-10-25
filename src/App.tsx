@@ -74,7 +74,7 @@ function AppContent({
 
   return (
     <Shell
-      freshness="Datos del turno · Firestore"
+      freshness="Todos los registros · Firestore"
       repository={repository}
       today={today}
     >
