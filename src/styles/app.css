@@ -1114,6 +1114,19 @@ a {
   margin: 0 0 6px;
 }
 
+/* Acceso con Google / GitHub: van fuera del <form> porque no envían nada. */
+.signin-sso {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.signin-sso-alt {
+  margin: 14px 0 0;
+  font-size: var(--fs-small);
+  color: var(--muted);
+}
+
 .signin-form {
   display: grid;
   gap: 14px;

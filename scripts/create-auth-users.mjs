@@ -1,16 +1,27 @@
 // scripts/create-auth-users.mjs — Crea usuarios de Firebase Auth para los miembros
 // Uso: DEMO_PASSWORD="..." bun scripts/create-auth-users.mjs
 // Requiere Email/Password habilitado, gcloud autenticado y .env con el proyecto.
+// No hay contraseña por defecto en el repo: hay que pasarla siempre.
 
 import { execSync } from "node:child_process";
 
 const API_KEY = process.env.VITE_FIREBASE_API_KEY;
 const PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID;
-const PASSWORD = process.env.DEMO_PASSWORD ?? "PanelOla2026!";
+const PASSWORD = process.env.DEMO_PASSWORD;
 
 if (!API_KEY || !PROJECT_ID) {
   console.error(
     "Faltan VITE_FIREBASE_API_KEY / VITE_FIREBASE_PROJECT_ID en .env",
+  );
+  process.exit(1);
+}
+
+if (!PASSWORD) {
+  console.error(
+    "❌ Falta DEMO_PASSWORD: no hay contraseña por defecto en el repo.",
+  );
+  console.error(
+    '   Ejecutá: DEMO_PASSWORD="..." bun scripts/create-auth-users.mjs',
   );
   process.exit(1);
 }

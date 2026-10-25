@@ -3,6 +3,9 @@ import type { User } from "firebase/auth";
 
 import type { Member, MemberRole } from "../domain/members";
 
+/** Proveedores SSO ofrecidos en la pantalla de acceso. */
+export type SsoProvider = "google" | "github";
+
 export interface AuthContextValue {
   user: User | null;
   member: Member | null;
@@ -10,6 +13,7 @@ export interface AuthContextValue {
   loading: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithProvider: (provider: SsoProvider) => Promise<void>;
   signUp: (
     name: string,
     email: string,

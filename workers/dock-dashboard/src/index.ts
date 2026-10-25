@@ -32,6 +32,7 @@ interface MemberRecord {
 const PREFIX = "/apps/dock-dashboard";
 const API_MEMBERS = `${PREFIX}/api/members`;
 const API_SIGNUP = `${PREFIX}/api/signup`;
+const API_SESSION = `${PREFIX}/api/session`;
 const API_AVATARS = `${PREFIX}/api/avatars`;
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 // Margen para las cabeceras multipart antes de leer el cuerpo.
@@ -361,11 +362,18 @@ async function handleProvision(request: Request, env: Env): Promise<Response> {
   }
 }
 
-async function findMemberByEmail(
+interface MemberMatch {
+  id: string;
+  email: string;
+  role: string;
+  uid: string | null;
+}
+
+async function queryMemberByEmail(
   env: Env,
   accessToken: string,
   email: string,
-): Promise<boolean> {
+): Promise<MemberMatch | null> {
   const response = await fetch(
     `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents:runQuery`,
     {
@@ -392,8 +400,32 @@ async function findMemberByEmail(
   if (!response.ok) {
     throw new Error("No se pudo verificar el email");
   }
-  const rows = (await response.json()) as Array<{ document?: unknown }>;
-  return rows.some((row) => Boolean(row.document));
+  const rows = (await response.json()) as Array<{
+    document?: {
+      name?: string;
+      fields?: {
+        email?: { stringValue?: string };
+        role?: { stringValue?: string };
+        uid?: { stringValue?: string };
+      };
+    };
+  }>;
+  const document = rows.find((row) => row.document)?.document;
+  if (!document?.name) return null;
+  return {
+    id: document.name.split("/").pop() ?? "",
+    email: document.fields?.email?.stringValue ?? "",
+    role: document.fields?.role?.stringValue ?? "",
+    uid: document.fields?.uid?.stringValue ?? null,
+  };
+}
+
+async function findMemberByEmail(
+  env: Env,
+  accessToken: string,
+  email: string,
+): Promise<boolean> {
+  return (await queryMemberByEmail(env, accessToken, email)) !== null;
 }
 
 async function createMemberDoc(
@@ -707,6 +739,73 @@ async function handleAvatarRead(
   });
 }
 
+/**
+ * Enlaza una cuenta creada por Google/GitHub con su ficha de `members` y le
+ * pinta el claim `role`.
+ *
+ * Sin esto el SSO no sirve para nada: las reglas de Firestore exigen un token
+ * provisionado, y el claim solo lo pinta el Admin SDK. Un signup de
+ * email/password lo recibe en `/api/signup`, pero el popup de un proveedor
+ * pasa por delante de nosotros.
+ */
+async function handleSession(request: Request, env: Env): Promise<Response> {
+  const cors = corsHeaders(request, env);
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: cors });
+  }
+  if (request.method !== "POST") {
+    return json({ error: "Método no permitido" }, 405, cors);
+  }
+
+  try {
+    const caller = await verifyCaller(request, env);
+    if (!caller) {
+      return json({ error: "Sesión inválida" }, 401, cors);
+    }
+
+    // Ya estaba enlazado: idempotente, no hace nada.
+    if (["admin", "responsable", "operario"].includes(caller.role)) {
+      return json({ role: caller.role }, 200, cors);
+    }
+
+    if (!caller.email) {
+      return json(
+        { error: "La cuenta del proveedor no expone un email." },
+        409,
+        cors,
+      );
+    }
+
+    const accessToken = await serviceAccountToken(env);
+    const member = await queryMemberByEmail(env, accessToken, caller.email);
+    if (!member) {
+      return json(
+        {
+          error: "Ese email no figura como miembro del panel.",
+          code: "not_member",
+        },
+        404,
+        cors,
+      );
+    }
+    if (!["admin", "responsable", "operario"].includes(member.role)) {
+      return json(
+        { error: "La ficha de miembro no tiene un rol válido." },
+        409,
+        cors,
+      );
+    }
+
+    await setRoleClaim(env, accessToken, caller.uid, member.role);
+    await patchMember(env, accessToken, member.id, { uid: caller.uid });
+
+    return json({ role: member.role, memberId: member.id }, 200, cors);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Error interno";
+    return json({ error: message }, 500, cors);
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -717,6 +816,10 @@ export default {
 
     if (url.pathname === API_SIGNUP) {
       return handleSignup(request, env);
+    }
+
+    if (url.pathname === API_SESSION) {
+      return handleSession(request, env);
     }
 
     if (url.pathname === API_AVATARS) {

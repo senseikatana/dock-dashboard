@@ -1,18 +1,31 @@
 import { useState } from "react";
 
+import type { SsoProvider } from "../auth/context";
 import { useAuth } from "../auth/useAuth";
 import site from "../content/site.json";
 
 type Mode = "signin" | "signup";
 
 export function SignIn() {
-  const { signIn, signUp, error, loading } = useAuth();
+  const { signIn, signInWithProvider, signUp, error, loading } = useAuth();
   const [mode, setMode] = useState<Mode>("signin");
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   // El panel virgen pide un código de instalación para el primer admin.
   const [needsBootstrap, setNeedsBootstrap] = useState(false);
   const [bootstrapToken, setBootstrapToken] = useState("");
+
+  async function handleProvider(provider: SsoProvider) {
+    setLocalError(null);
+    setSubmitting(true);
+    try {
+      await signInWithProvider(provider);
+    } catch {
+      // El mensaje se muestra desde el contexto de auth.
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -100,6 +113,31 @@ export function SignIn() {
           {mode === "signin"
             ? "Iniciá sesión con tu cuenta de empresa para ver el turno."
             : "Registrate con tu email. El alta crea un usuario operario. En un panel vacío se pide el código de instalación y la primera cuenta queda como admin."}
+        </p>
+
+        <div className="signin-sso">
+          <button
+            type="button"
+            className="btn"
+            disabled={submitting || loading}
+            onClick={() => handleProvider("google")}
+          >
+            Continuar con Google
+          </button>
+          <button
+            type="button"
+            className="btn"
+            disabled={submitting || loading}
+            onClick={() => handleProvider("github")}
+          >
+            Continuar con GitHub
+          </button>
+        </div>
+
+        <p className="signin-sso-alt">
+          {mode === "signin"
+            ? "o entrá con tu email y contraseña"
+            : "o registrate con tu email y contraseña"}
         </p>
 
         <form key={mode} className="signin-form" onSubmit={handleSubmit}>

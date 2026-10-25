@@ -7,15 +7,27 @@ import {
 } from "react";
 import type { User } from "firebase/auth";
 import {
+  GithubAuthProvider,
+  GoogleAuthProvider,
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut as firebaseSignOut,
 } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
 import { firebaseAuthClient, firebaseDb } from "../data/firebaseClient";
 import type { Member } from "../domain/members";
-import { AuthContext, type AuthContextValue } from "./context";
+import {
+  AuthContext,
+  type AuthContextValue,
+  type SsoProvider,
+} from "./context";
+
+const SSO_LABEL: Record<SsoProvider, string> = {
+  google: "Google",
+  github: "GitHub",
+};
 
 async function findMemberByEmail(email: string): Promise<Member | null> {
   const snapshot = await getDocs(
@@ -28,7 +40,38 @@ async function findMemberByEmail(email: string): Promise<Member | null> {
   return found ? (found.data() as Member) : null;
 }
 
-function messageForError(error: unknown): string {
+type LinkStatus = "linked" | "not_member" | "failed";
+
+/**
+ * Pide al Worker que enlace una cuenta recién creada por Google/GitHub con su
+ * ficha de `members` y que le pinte el claim `role`. Sin ese claim las reglas
+ * de Firestore no dejan ni leer `members`, así que un login SSO que no pase
+ * por aquí queda siempre bloqueado.
+ */
+async function linkSession(user: User): Promise<LinkStatus> {
+  try {
+    const idToken = await user.getIdToken();
+    const base =
+      import.meta.env.VITE_AUTH_API_URL ?? "/apps/dock-dashboard/api";
+    const response = await fetch(`${base}/session`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
+    if (response.ok) return "linked";
+    const data = (await response.json().catch(() => ({}))) as {
+      code?: string;
+    };
+    return data.code === "not_member" ? "not_member" : "failed";
+  } catch {
+    // Sin red no se puede enlazar: que decida la lectura de `members`.
+    return "failed";
+  }
+}
+
+function messageForError(error: unknown, sso?: SsoProvider): string {
   const code =
     typeof error === "object" && error !== null && "code" in error
       ? String((error as { code: unknown }).code)
@@ -36,6 +79,11 @@ function messageForError(error: unknown): string {
 
   switch (code) {
     case "auth/invalid-credential":
+      // Mismo código para "contraseña mala" y para "OAuth mal configurado":
+      // el desenlace depende de si venimos de un proveedor.
+      return sso
+        ? `No se pudo conectar con ${SSO_LABEL[sso]}. Revisá que el proveedor esté habilitado en Firebase → Authentication → Sign-in method.`
+        : "Email o contraseña incorrectos.";
     case "auth/wrong-password":
     case "auth/user-not-found":
       return "Email o contraseña incorrectos.";
@@ -43,13 +91,26 @@ function messageForError(error: unknown): string {
       return "Demasiados intentos. Esperá unos minutos y volvé a probar.";
     case "auth/operation-not-allowed":
     case "auth/configuration-not-found":
-      return "Email/Password no está habilitado en Firebase. Activá Authentication → Sign-in method → Email/Password en la consola.";
+      return sso
+        ? `${SSO_LABEL[sso]} no está habilitado. Activá Authentication → Sign-in method → ${SSO_LABEL[sso]} en la consola de Firebase.`
+        : "Email/Password no está habilitado en Firebase. Activá Authentication → Sign-in method → Email/Password en la consola.";
+    case "auth/unauthorized-domain":
+      return "Este dominio no está autorizado en Firebase. Añadilo en Authentication → Settings → Authorized domains.";
+    case "auth/popup-blocked":
+      return "El navegador bloqueó la ventana de acceso. Permití las ventanas emergentes para este sitio y volvé a intentar.";
+    case "auth/popup-closed-by-user":
+    case "auth/cancelled-popup-request":
+      return "Se cerró la ventana de acceso antes de terminar.";
+    case "auth/account-exists-with-different-credential":
+      return "Ya existe una cuenta con ese email usando otro método de acceso. Entrá con el método con el que se creó.";
     case "auth/network-request-failed":
       return "No se pudo conectar con Firebase. Revisá tu conexión.";
     case "auth/invalid-email":
       return "El email no tiene un formato válido.";
     default:
-      return "No se pudo iniciar sesión. Intentá de nuevo.";
+      return sso
+        ? `No se pudo iniciar sesión con ${SSO_LABEL[sso]}. Intentá de nuevo.`
+        : "No se pudo iniciar sesión. Intentá de nuevo.";
   }
 }
 
@@ -65,15 +126,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      // Las reglas exigen el claim `role`. Si el token cacheado todavía no lo
-      // tiene (rol recién sincronizado o sesión vieja), forzamos un refresh
-      // antes de leer: si no, el usuario vería "no figura como miembro".
       const token = await current.getIdTokenResult();
       if (!token.claims.role) {
-        await current.getIdToken(true);
+        const status = await linkSession(current);
+        if (status === "linked") {
+          // El claim acaba de pintarse: el token cacheado no lo trae todavía.
+          await current.getIdToken(true);
+        }
+        if (status === "not_member") {
+          setMember(null);
+          return;
+        }
       }
     } catch {
-      // Si el refresh falla, la lectura de members va a fallar igual.
+      // Si el enlace o el refresh fallan, la lectura de members de abajo
+      // decide: sin claim va a fallar y se mostrará "no figura como miembro".
     }
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
@@ -116,6 +183,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (signInError) {
       setError(messageForError(signInError));
       throw signInError;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const signInWithProvider = useCallback(async (provider: SsoProvider) => {
+    setError(null);
+    setLoading(true);
+    try {
+      const credential =
+        provider === "google"
+          ? new GoogleAuthProvider()
+          : new GithubAuthProvider();
+      if (provider === "github") {
+        // `findMemberByEmail` necesita el email para enlazar la sesión con la
+        // ficha de `members`. El scope `repo` que trae la documentación de
+        // Firebase daría acceso de escritura a los repos: no hace falta.
+        credential.addScope("user:email");
+      }
+      await signInWithPopup(firebaseAuthClient(), credential);
+    } catch (ssoError) {
+      setError(messageForError(ssoError, provider));
+      throw ssoError;
     } finally {
       setLoading(false);
     }
@@ -188,11 +278,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       signIn,
+      signInWithProvider,
       signUp,
       signOut,
       refreshMember,
     }),
-    [user, member, loading, error, signIn, signUp, signOut, refreshMember],
+    [
+      user,
+      member,
+      loading,
+      error,
+      signIn,
+      signInWithProvider,
+      signUp,
+      signOut,
+      refreshMember,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

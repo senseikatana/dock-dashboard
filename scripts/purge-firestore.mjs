@@ -1,20 +1,14 @@
-// scripts/purge-firestore.mjs — Borra todos los datos del panel en Firestore
-// Uso interactivo:  bun scripts/purge-firestore.mjs
-// Uso en scripts/CI: bun scripts/purge-firestore.mjs --yes
+// scripts/purge-firestore.mjs — Borra los datos operativos de Firestore.
 //
-// La purga borra datos del proyecto real que indique VITE_FIREBASE_PROJECT_ID,
-// así que en terminal interactiva pide confirmación y en modo no interactivo
-// exige el flag --yes explícito.
+// Uso interactivo:  bun scripts/purge-firestore.mjs
+// Uso automatizado: bun scripts/purge-firestore.mjs --yes
+// Dry run:          bun scripts/purge-firestore.mjs --dry-run
+//
+// Entra con un token de acceso de gcloud, no como usuario, así que no hace
+// falta ninguna contraseña en el repo ni en .env. Mismo requisito que
+// `bun run auth:users` y `bun run auth:sync-roles`: gcloud autenticado.
 
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  deleteDoc,
-} from "firebase/firestore";
-import { createInterface } from "node:readline/promises";
+import { execSync } from "node:child_process";
 
 const COLLECTIONS = [
   "albaranes",
@@ -27,19 +21,81 @@ const COLLECTIONS = [
 ];
 
 const FORCE = process.argv.includes("--yes") || process.argv.includes("-y");
+const DRY_RUN = process.argv.includes("--dry-run");
+// Tamaño máximo de un commit de Firestore: 500 escrituras.
+const COMMIT_BATCH = 500;
 
-if (getApps().length === 0) {
-  initializeApp({
-    apiKey: process.env.VITE_FIREBASE_API_KEY,
-    authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-  });
+const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
+if (!projectId) {
+  console.error("Falta VITE_FIREBASE_PROJECT_ID en .env");
+  process.exit(1);
 }
 
-const db = getFirestore();
+const base = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
+
+function accessToken() {
+  try {
+    return execSync("gcloud auth print-access-token", {
+      stdio: ["ignore", "pipe", "pipe"],
+    })
+      .toString()
+      .trim();
+  } catch {
+    console.error("❌ No se pudo obtener un token de acceso de gcloud.");
+    console.error("   Ejecutá `gcloud auth login` y volvé a intentarlo.");
+    process.exit(1);
+  }
+}
+
+function authHeaders(token) {
+  return {
+    Authorization: `Bearer ${token}`,
+    "x-goog-user-project": projectId,
+    "Content-Type": "application/json",
+  };
+}
+
+// `pageSize` está limitado a 300: hay que paginar o se borra una fracción.
+async function listDocumentNames(collection, token) {
+  const names = [];
+  let pageToken = "";
+  do {
+    const url = new URL(`${base}/${collection}`);
+    url.searchParams.set("pageSize", "300");
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+    const response = await fetch(url, { headers: authHeaders(token) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(
+        data?.error?.message ?? `No se pudo leer la colección ${collection}`,
+      );
+    }
+    for (const document of data.documents ?? []) names.push(document.name);
+    pageToken = data.nextPageToken ?? "";
+  } while (pageToken);
+  return names;
+}
+
+async function deleteDocuments(names, token) {
+  for (let i = 0; i < names.length; i += COMMIT_BATCH) {
+    const chunk = names.slice(i, i + COMMIT_BATCH);
+    const response = await fetch(`${base}:commit`, {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify({ writes: chunk.map((name) => ({ delete: name })) }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(
+        data?.error?.message ?? "No se pudieron borrar los documentos",
+      );
+    }
+  }
+}
 
 async function confirmAction(message) {
-  if (FORCE) return true;
+  if (FORCE || DRY_RUN) return true;
 
   if (!process.stdin.isTTY) {
     console.error("❌ Purga abortada: no hay terminal para confirmar.");
@@ -52,6 +108,7 @@ async function confirmAction(message) {
     return false;
   }
 
+  const { createInterface } = await import("node:readline/promises");
   const rl = createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -78,25 +135,30 @@ async function purge() {
   );
 
   const confirmed = await confirmAction(
-    `¿Continuar con la purga de "${process.env.VITE_FIREBASE_PROJECT_ID}"?`,
+    `¿Continuar con la purga de "${projectId}"?`,
   );
   if (!confirmed) {
     console.log("Operación cancelada. Nada se ha borrado.");
     process.exit(1);
   }
 
-  const auth = getAuth();
-  await signInWithEmailAndPassword(
-    auth,
-    process.env.ADMIN_EMAIL ?? "sergio@panel-ola.es",
-    process.env.ADMIN_PASSWORD ?? "PanelOla2026!",
-  );
-  for (const name of COLLECTIONS) {
-    const snapshot = await getDocs(collection(db, name));
-    await Promise.all(snapshot.docs.map((docSnap) => deleteDoc(docSnap.ref)));
-    console.log(`✓ ${name}: ${snapshot.size} documentos borrados`);
+  const token = accessToken();
+
+  for (const collection of COLLECTIONS) {
+    const names = await listDocumentNames(collection, token);
+    if (DRY_RUN) {
+      console.log(`· ${collection}: ${names.length} documentos (dry run)`);
+      continue;
+    }
+    if (names.length > 0) await deleteDocuments(names, token);
+    console.log(`✓ ${collection}: ${names.length} documentos borrados`);
   }
-  console.log("Purga completa — Firestore vacío.");
+
+  console.log(
+    DRY_RUN
+      ? "Dry run terminado — no se ha borrado nada."
+      : "Purga completa — Firestore vacío.",
+  );
   process.exit(0);
 }
 

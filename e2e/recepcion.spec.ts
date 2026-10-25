@@ -1,7 +1,21 @@
 import { expect, test } from "@playwright/test";
 
+// No hay contraseña por defecto en el repo: o se exporta, o la suite no
+// arranca. Preferible a dejar un password versionado en git. Devuelve
+// `string` explícitamente porque el estrechamiento de un `if` en ámbito de
+// módulo no llega al interior de `signIn`.
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(
+      `Falta ${name}. Exportala antes de lanzar la suite (o configúrala como secreto de CI).`,
+    );
+  }
+  return value;
+}
+
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "sergio@panel-ola.es";
-const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "PanelOla2026!";
+const ADMIN_PASSWORD = requiredEnv("E2E_ADMIN_PASSWORD");
 
 async function signIn(page: import("@playwright/test").Page) {
   await page.goto("/");
