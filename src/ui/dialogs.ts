@@ -49,3 +49,24 @@ export function toastSuccess(title: string): void {
     },
   });
 }
+
+/**
+ * Aviso de fallo. Sin esto los errores de Firestore se tragaban en silencio:
+ * el usuario pulsaba "Guardar" y no pasaba nada. Se queda más tiempo que el
+ * toast de éxito porque hay que leerlo.
+ */
+export function toastError(title: string): void {
+  void Swal.fire({
+    toast: true,
+    position: "bottom-end",
+    icon: "error",
+    title,
+    showConfirmButton: false,
+    timer: 4200,
+    timerProgressBar: true,
+    customClass: {
+      popup: "dock-toast",
+      title: "dock-toast-title",
+    },
+  });
+}

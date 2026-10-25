@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import type { ShiftData, WarehouseRepository } from "../data/repository";
+import type { WarehouseRepository } from "../data/repository";
+import { useShift } from "../data/useShift";
 import { formatCount } from "../domain/format";
 import type { WasteRecord } from "../domain/operations";
 import { wasteTotalKg } from "../domain/operations";
+import { confirmDestructive, toastError, toastSuccess } from "../ui/dialogs";
 
 const KIND_COPY: Record<WasteRecord["kind"], string> = {
   embalaje: "Embalaje",
@@ -20,22 +22,12 @@ export function Residuos({
   repository: WarehouseRepository;
   today: string;
 }) {
-  const [shift, setShift] = useState<ShiftData | null>(null);
+  const { shift, error, reload } = useShift(repository, today);
   const [showForm, setShowForm] = useState(false);
 
-  async function refresh() {
-    setShift(await repository.loadShift(today));
+  if (error) {
+    return <div className="empty-slot">{error}</div>;
   }
-
-  useEffect(() => {
-    let cancelled = false;
-    repository.loadShift(today).then((data) => {
-      if (!cancelled) setShift(data);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [repository, today]);
 
   if (!shift) {
     return <div className="empty-slot">Cargando el turno…</div>;
@@ -44,14 +36,33 @@ export function Residuos({
   const totalKg = wasteTotalKg(shift.wasteRecords);
 
   async function addRecord(record: WasteRecord) {
-    await repository.addWasteRecord(record);
-    await refresh();
+    try {
+      await repository.addWasteRecord(record);
+    } catch {
+      toastError("No se pudo registrar la retirada.");
+      return;
+    }
     setShowForm(false);
+    toastSuccess("Retirada registrada.");
+    await reload();
   }
 
   async function removeRecord(recordId: string) {
-    await repository.deleteWasteRecord(recordId);
-    await refresh();
+    const confirmed = await confirmDestructive({
+      title: "Eliminar retirada",
+      text: "Se borrará el registro de forma permanente. No se puede deshacer.",
+      confirmText: "Eliminar",
+    });
+    if (!confirmed) return;
+
+    try {
+      await repository.deleteWasteRecord(recordId);
+    } catch {
+      toastError("No se pudo eliminar la retirada.");
+      return;
+    }
+    toastSuccess("Retirada eliminada.");
+    await reload();
   }
 
   return (

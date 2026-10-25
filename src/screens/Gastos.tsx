@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import type { ShiftData, WarehouseRepository } from "../data/repository";
+import type { WarehouseRepository } from "../data/repository";
+import { useShift } from "../data/useShift";
 import { formatEur } from "../domain/format";
 import type { Expense, ExpenseCategory } from "../domain/operations";
 import { expenseTotalsByCategory } from "../domain/operations";
+import { confirmDestructive, toastError, toastSuccess } from "../ui/dialogs";
 
 const CATEGORY_COPY: Record<ExpenseCategory, string> = {
   suministros: "Suministros",
@@ -20,22 +22,12 @@ export function Gastos({
   repository: WarehouseRepository;
   today: string;
 }) {
-  const [shift, setShift] = useState<ShiftData | null>(null);
+  const { shift, error, reload } = useShift(repository, today);
   const [showForm, setShowForm] = useState(false);
 
-  async function refresh() {
-    setShift(await repository.loadShift(today));
+  if (error) {
+    return <div className="empty-slot">{error}</div>;
   }
-
-  useEffect(() => {
-    let cancelled = false;
-    repository.loadShift(today).then((data) => {
-      if (!cancelled) setShift(data);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [repository, today]);
 
   if (!shift) {
     return <div className="empty-slot">Cargando el turno…</div>;
@@ -46,14 +38,33 @@ export function Gastos({
   const maxCategory = totals[0]?.amountEur ?? 1;
 
   async function addExpense(expense: Expense) {
-    await repository.addExpense(expense);
-    await refresh();
+    try {
+      await repository.addExpense(expense);
+    } catch {
+      toastError("No se pudo guardar el gasto.");
+      return;
+    }
     setShowForm(false);
+    toastSuccess("Gasto guardado.");
+    await reload();
   }
 
   async function removeExpense(expenseId: string) {
-    await repository.deleteExpense(expenseId);
-    await refresh();
+    const confirmed = await confirmDestructive({
+      title: "Eliminar gasto",
+      text: "Se borrará el apunte de forma permanente. No se puede deshacer.",
+      confirmText: "Eliminar",
+    });
+    if (!confirmed) return;
+
+    try {
+      await repository.deleteExpense(expenseId);
+    } catch {
+      toastError("No se pudo eliminar el gasto.");
+      return;
+    }
+    toastSuccess("Gasto eliminado.");
+    await reload();
   }
 
   return (

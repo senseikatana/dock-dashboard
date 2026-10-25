@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { Link } from "react-router-dom";
 import Chart from "chart.js/auto";
 
-import type { ShiftData, WarehouseRepository } from "../data/repository";
+import type { WarehouseRepository } from "../data/repository";
+import { useShift } from "../data/useShift";
 import dashboard from "../content/dashboard.json";
 import {
   checkNote,
@@ -15,7 +16,7 @@ import {
   formatLongDate,
   formatPct,
 } from "../domain/format";
-import { confirmDestructive, toastSuccess } from "../ui/dialogs";
+import { confirmDestructive, toastError, toastSuccess } from "../ui/dialogs";
 
 type Tone = "positive" | "warning" | "negative" | "neutral";
 
@@ -205,25 +206,11 @@ export function CuadroDeMando({
   repository: WarehouseRepository;
   today: string;
 }) {
-  const [shift, setShift] = useState<ShiftData | null>(null);
+  const { shift, error, reload } = useShift(repository, today);
   const [busy, setBusy] = useState(false);
   const sparklineRef = useRef<HTMLCanvasElement>(null);
   const lineRef = useRef<HTMLCanvasElement>(null);
   const donutRef = useRef<HTMLCanvasElement>(null);
-
-  async function refresh() {
-    setShift(await repository.loadShift(today));
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-    repository.loadShift(today).then((data) => {
-      if (!cancelled) setShift(data);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [repository, today]);
 
   useEffect(() => {
     if (!shift) return;
@@ -364,6 +351,10 @@ export function CuadroDeMando({
     };
   }, [shift]);
 
+  if (error) {
+    return <div className="empty-slot">{error}</div>;
+  }
+
   if (!shift) {
     return <div className="empty-slot">Cargando el turno…</div>;
   }
@@ -411,8 +402,12 @@ export function CuadroDeMando({
     setBusy(true);
     try {
       await repository.purgeSeed();
-      await refresh();
+      await reload();
       toastSuccess("Datos purgados");
+    } catch {
+      // Sin este catch el fallo salía como rechazo no capturado y la
+      // pantalla no decía nada: parecía que la purga había funcionado.
+      toastError("No se pudieron purgar los datos.");
     } finally {
       setBusy(false);
     }

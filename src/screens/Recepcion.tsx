@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { AlbaranesTable } from "../components/AlbaranesTable";
 import { KpiStrip } from "../components/KpiStrip";
 import { MermaRail, type OpenDifference } from "../components/MermaRail";
 import type { ShiftData, WarehouseRepository } from "../data/repository";
+import { useShift } from "../data/useShift";
 import type { DeliveryNote, NoteStatus } from "../domain/reception";
 import { localDateIso } from "../domain/date";
 import { MAX_DOCKS } from "../domain/reception";
@@ -12,6 +13,7 @@ import {
   shrinkageByMaterial,
   summarizeShift,
 } from "../domain/reception";
+import { confirmDestructive, toastError, toastSuccess } from "../ui/dialogs";
 
 type Tab = "pendientes" | "todos" | "incidencias";
 
@@ -53,20 +55,10 @@ export function Recepcion({
   repository: WarehouseRepository;
   today: string;
 }) {
-  const [shift, setShift] = useState<ShiftData | null>(null);
+  const { shift, error, reload } = useShift(repository, today);
   const [tab, setTab] = useState<Tab>("pendientes");
   const [showForm, setShowForm] = useState(false);
   const [justStamped, setJustStamped] = useState<string[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    repository.loadShift(today).then((data) => {
-      if (!cancelled) setShift(data);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [repository, today]);
 
   const summary = useMemo(
     () => (shift ? summarizeShift({ ...shift, today }) : null),
@@ -80,6 +72,10 @@ export function Recepcion({
     () => (shift ? openDifferences(shift) : []),
     [shift],
   );
+
+  if (error) {
+    return <div className="empty-slot">{error}</div>;
+  }
 
   if (!shift || !summary) {
     return <div className="empty-slot">Cargando el turno…</div>;
@@ -104,9 +100,14 @@ export function Recepcion({
     .sort((a, b) => a.dock - b.dock || a.id.localeCompare(b.id));
 
   async function validate(noteId: string) {
-    await repository.validateNote(noteId, new Date().toISOString());
+    try {
+      await repository.validateNote(noteId, new Date().toISOString());
+    } catch {
+      toastError("No se pudo validar el albarán.");
+      return;
+    }
     setJustStamped((ids) => [...ids, noteId]);
-    setShift(await repository.loadShift(today));
+    await reload();
   }
 
   function selectTab(next: Tab) {
@@ -115,14 +116,33 @@ export function Recepcion({
   }
 
   async function register(note: DeliveryNote) {
-    await repository.addNote(note);
-    setShift(await repository.loadShift(today));
+    try {
+      await repository.addNote(note);
+    } catch {
+      toastError("No se pudo registrar la recepción.");
+      return;
+    }
     setShowForm(false);
+    toastSuccess("Recepción registrada.");
+    await reload();
   }
 
   async function remove(noteId: string) {
-    await repository.deleteNote(noteId);
-    setShift(await repository.loadShift(today));
+    const confirmed = await confirmDestructive({
+      title: "Eliminar albarán",
+      text: "Se borrará el albarán y sus líneas de forma permanente. No se puede deshacer.",
+      confirmText: "Eliminar",
+    });
+    if (!confirmed) return;
+
+    try {
+      await repository.deleteNote(noteId);
+    } catch {
+      toastError("No se pudo eliminar el albarán.");
+      return;
+    }
+    toastSuccess("Albarán eliminado.");
+    await reload();
   }
 
   return (

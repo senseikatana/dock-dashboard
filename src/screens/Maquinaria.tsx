@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import type { ShiftData, WarehouseRepository } from "../data/repository";
+import type { WarehouseRepository } from "../data/repository";
+import { useShift } from "../data/useShift";
 import type { Machine } from "../domain/reception";
+import { confirmDestructive, toastError, toastSuccess } from "../ui/dialogs";
 
 const KIND_COPY: Record<Machine["kind"], string> = {
   frontal: "Frontal",
@@ -25,22 +27,12 @@ export function Maquinaria({
   repository: WarehouseRepository;
   today: string;
 }) {
-  const [shift, setShift] = useState<ShiftData | null>(null);
+  const { shift, error, reload } = useShift(repository, today);
   const [showForm, setShowForm] = useState(false);
 
-  async function refresh() {
-    setShift(await repository.loadShift(today));
+  if (error) {
+    return <div className="empty-slot">{error}</div>;
   }
-
-  useEffect(() => {
-    let cancelled = false;
-    repository.loadShift(today).then((data) => {
-      if (!cancelled) setShift(data);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [repository, today]);
 
   if (!shift) {
     return <div className="empty-slot">Cargando el turno…</div>;
@@ -51,19 +43,43 @@ export function Maquinaria({
   ).length;
 
   async function addMachine(machine: Machine) {
-    await repository.addMachine(machine);
-    await refresh();
+    try {
+      await repository.addMachine(machine);
+    } catch {
+      toastError("No se pudo guardar la máquina.");
+      return;
+    }
     setShowForm(false);
+    toastSuccess("Máquina guardada.");
+    await reload();
   }
 
   async function changeStatus(machineId: string, status: Machine["status"]) {
-    await repository.updateMachine(machineId, { status });
-    await refresh();
+    try {
+      await repository.updateMachine(machineId, { status });
+    } catch {
+      toastError("No se pudo cambiar el estado.");
+      return;
+    }
+    await reload();
   }
 
   async function removeMachine(machineId: string) {
-    await repository.deleteMachine(machineId);
-    await refresh();
+    const confirmed = await confirmDestructive({
+      title: "Eliminar máquina",
+      text: "Se dará de baja la unidad del parque. No se puede deshacer.",
+      confirmText: "Eliminar",
+    });
+    if (!confirmed) return;
+
+    try {
+      await repository.deleteMachine(machineId);
+    } catch {
+      toastError("No se pudo eliminar la máquina.");
+      return;
+    }
+    toastSuccess("Máquina eliminada.");
+    await reload();
   }
 
   return (

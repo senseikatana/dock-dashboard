@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import type { ShiftData, WarehouseRepository } from "../data/repository";
+import type { WarehouseRepository } from "../data/repository";
+import { useShift } from "../data/useShift";
 import { formatEur } from "../domain/format";
 import type { ShrinkageEvent } from "../domain/reception";
 import { checkNote } from "../domain/reception";
+import { confirmDestructive, toastError, toastSuccess } from "../ui/dialogs";
 
 const ORIGIN_COPY = { known: "Conocida", unknown: "Desconocida" } as const;
 
@@ -20,22 +22,12 @@ export function Incidencias({
   repository: WarehouseRepository;
   today: string;
 }) {
-  const [shift, setShift] = useState<ShiftData | null>(null);
+  const { shift, error, reload } = useShift(repository, today);
   const [showForm, setShowForm] = useState(false);
 
-  async function refresh() {
-    setShift(await repository.loadShift(today));
+  if (error) {
+    return <div className="empty-slot">{error}</div>;
   }
-
-  useEffect(() => {
-    let cancelled = false;
-    repository.loadShift(today).then((data) => {
-      if (!cancelled) setShift(data);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [repository, today]);
 
   if (!shift) {
     return <div className="empty-slot">Cargando el turno…</div>;
@@ -59,14 +51,33 @@ export function Incidencias({
   );
 
   async function addEvent(event: ShrinkageEvent) {
-    await repository.addShrinkageEvent(event);
-    await refresh();
+    try {
+      await repository.addShrinkageEvent(event);
+    } catch {
+      toastError("No se pudo registrar la incidencia.");
+      return;
+    }
     setShowForm(false);
+    toastSuccess("Incidencia registrada.");
+    await reload();
   }
 
   async function removeEvent(eventId: string) {
-    await repository.deleteShrinkageEvent(eventId);
-    await refresh();
+    const confirmed = await confirmDestructive({
+      title: "Eliminar incidencia",
+      text: "Se borrará el registro de forma permanente. No se puede deshacer.",
+      confirmText: "Eliminar",
+    });
+    if (!confirmed) return;
+
+    try {
+      await repository.deleteShrinkageEvent(eventId);
+    } catch {
+      toastError("No se pudo eliminar la incidencia.");
+      return;
+    }
+    toastSuccess("Incidencia eliminada.");
+    await reload();
   }
 
   return (
