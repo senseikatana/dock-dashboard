@@ -54,10 +54,13 @@ export function Account({ repository }: { repository: WarehouseRepository }) {
     try {
       const form = new FormData(event.currentTarget);
       const name = String(form.get("name")).trim();
-      const avatarUrl = avatarFile
-        ? await uploadAvatar(member.id, avatarFile)
-        : member.avatarUrl;
-      await repository.updateMember(member.id, { name, avatarUrl });
+      // Firestore rechaza `undefined` (ignoreUndefinedProperties está en
+      // false) y la mayoría de los miembros no tiene avatar todavía.
+      const patch: { name: string; avatarUrl?: string } = { name };
+      if (avatarFile) {
+        patch.avatarUrl = await uploadAvatar(member.id, avatarFile);
+      }
+      await repository.updateMember(member.id, patch);
       await updateProfile(user, { displayName: name });
       await refreshMember();
       setAvatarFile(null);
@@ -96,10 +99,13 @@ export function Account({ repository }: { repository: WarehouseRepository }) {
   async function savePassword(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!user) return;
+    // React anula currentTarget cuando termina el dispatch: si lo leemos
+    // después de un await, el reset() explota aunque la clave ya cambió.
+    const formElement = event.currentTarget;
     setError(null);
     setBusy(true);
     try {
-      const form = new FormData(event.currentTarget);
+      const form = new FormData(formElement);
       const password = String(form.get("password"));
       const repeat = String(form.get("repeat"));
       if (password.length < 6) {
@@ -109,7 +115,7 @@ export function Account({ repository }: { repository: WarehouseRepository }) {
         throw new Error("Las contraseñas no coinciden.");
       }
       await updatePassword(user, password);
-      event.currentTarget.reset();
+      formElement.reset();
       toastSuccess("Contraseña actualizada");
     } catch (passwordError) {
       setError(
@@ -157,7 +163,7 @@ export function Account({ repository }: { repository: WarehouseRepository }) {
                 Avatar (máx. 5 MB)
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/webp"
                   onChange={(event) =>
                     setAvatarFile(event.currentTarget.files?.[0] ?? null)
                   }

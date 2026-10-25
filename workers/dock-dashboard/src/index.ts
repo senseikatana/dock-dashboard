@@ -7,6 +7,9 @@ interface Env {
   FIREBASE_API_KEY: string;
   ALLOWED_ORIGINS: string;
   FIREBASE_SERVICE_ACCOUNT: string;
+  // Secreto de instalación: obligatorio solo mientras el panel no tenga
+  // ningún miembro. Evita que el primer registro público se quede el admin.
+  BOOTSTRAP_TOKEN?: string;
 }
 
 interface ServiceAccount {
@@ -31,6 +34,10 @@ const API_MEMBERS = `${PREFIX}/api/members`;
 const API_SIGNUP = `${PREFIX}/api/signup`;
 const API_AVATARS = `${PREFIX}/api/avatars`;
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+// Margen para las cabeceras multipart antes de leer el cuerpo.
+const MAX_UPLOAD_BYTES = MAX_AVATAR_BYTES + 8 * 1024;
+const ALLOWED_AVATAR_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const MEMBER_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
 let tokenCache: { token: string; expiresAt: number } | null = null;
 
@@ -46,15 +53,19 @@ function json(data: unknown, status = 200, extraHeaders: HeadersInit = {}) {
 
 function corsHeaders(request: Request, env: Env): HeadersInit {
   const origin = request.headers.get("Origin") ?? "";
-  const allowed = env.ALLOWED_ORIGINS.split(",").map((item) => item.trim());
-  return {
-    "Access-Control-Allow-Origin": allowed.includes(origin)
-      ? origin
-      : allowed[0],
+  const allowed = env.ALLOWED_ORIGINS.split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const headers: Record<string, string> = {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Authorization, Content-Type",
     Vary: "Origin",
   };
+  // Sin origen permitido no se emite la cabecera: el navegador bloquea.
+  if (allowed.includes(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+  return headers;
 }
 
 function decodeJwtPayload(token: string): Record<string, unknown> {
@@ -133,7 +144,12 @@ async function verifyCaller(
   const user = data.users?.[0];
   if (!response.ok || !user) return null;
 
-  const payload = decodeJwtPayload(idToken);
+  let payload: Record<string, unknown>;
+  try {
+    payload = decodeJwtPayload(idToken);
+  } catch {
+    return null;
+  }
   return {
     uid: user.localId,
     email: user.email ?? "",
@@ -233,6 +249,26 @@ async function createAuthUser(
     throw new Error(`No se pudo crear la cuenta: ${code}`);
   }
   return data.localId;
+}
+
+// Rollback si el alta inicial pierde la carrera: el usuario se creó sin
+// claim, así que borrarlo no deja privilegios colgando.
+async function deleteAuthUser(
+  env: Env,
+  accessToken: string,
+  uid: string,
+): Promise<void> {
+  await fetch(
+    `https://identitytoolkit.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/accounts:delete`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ localId: uid }),
+    },
+  );
 }
 
 async function setRoleClaim(
@@ -406,6 +442,44 @@ async function hasAnyMember(env: Env, accessToken: string): Promise<boolean> {
   return (data.documents?.length ?? 0) > 0;
 }
 
+// Reserva atómica del alta inicial. La precondición `exists: false` hace que
+// solo un request pueda ganar aunque lleguen en paralelo; sin esto, dos
+// signups concurrentes leen "panel vacío" y los dos quedan como admin.
+async function claimBootstrap(
+  env: Env,
+  accessToken: string,
+  uid: string,
+): Promise<boolean> {
+  const documentName = `projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/config/bootstrap`;
+  const response = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents:commit`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        writes: [
+          {
+            update: {
+              name: documentName,
+              fields: { claimedBy: { stringValue: uid } },
+            },
+            currentDocument: { exists: false },
+          },
+        ],
+      }),
+    },
+  );
+  // 400/409/412 = la precondición no se cumplió: otro request ya reservó.
+  if ([400, 409, 412].includes(response.status)) return false;
+  if (!response.ok) {
+    throw new Error("No se pudo reservar el alta inicial del panel");
+  }
+  return true;
+}
+
 async function handleSignup(request: Request, env: Env): Promise<Response> {
   const cors = corsHeaders(request, env);
   if (request.method === "OPTIONS") {
@@ -420,6 +494,7 @@ async function handleSignup(request: Request, env: Env): Promise<Response> {
       name?: string;
       email?: string;
       password?: string;
+      bootstrapToken?: string;
     };
     const name = body.name?.trim() ?? "";
     const email = body.email?.trim().toLowerCase() ?? "";
@@ -449,7 +524,33 @@ async function handleSignup(request: Request, env: Env): Promise<Response> {
       );
     }
 
-    const role = (await hasAnyMember(env, accessToken)) ? "operario" : "admin";
+    const isFirstMember = !(await hasAnyMember(env, accessToken));
+
+    // Panel virgen: exige el código de instalación. Sin esto, cualquiera que
+    // llegue primero se queda con el admin.
+    if (isFirstMember) {
+      if (!env.BOOTSTRAP_TOKEN) {
+        return json(
+          {
+            error:
+              "El panel todavía no tiene administrador. Configurá BOOTSTRAP_TOKEN en el Worker y volvé a intentar.",
+            code: "bootstrap_unconfigured",
+          },
+          503,
+          cors,
+        );
+      }
+      if (body.bootstrapToken !== env.BOOTSTRAP_TOKEN) {
+        return json(
+          {
+            error: "Esta instalación pide el código de instalación.",
+            code: "bootstrap_required",
+          },
+          403,
+          cors,
+        );
+      }
+    }
 
     let uid: string;
     try {
@@ -465,13 +566,31 @@ async function handleSignup(request: Request, env: Env): Promise<Response> {
       throw error;
     }
 
+    let role = "operario";
+    if (isFirstMember) {
+      const claimed = await claimBootstrap(env, accessToken, uid);
+      if (!claimed) {
+        await deleteAuthUser(env, accessToken, uid);
+        return json(
+          {
+            error:
+              "Otra alta inicial ya reservó el panel. Pedile acceso al administrador.",
+            code: "bootstrap_conflict",
+          },
+          409,
+          cors,
+        );
+      }
+      role = "admin";
+    }
+
     await setRoleClaim(env, accessToken, uid, role);
     await createMemberDoc(env, accessToken, uid, name, email, role);
 
     return json({ uid, email, role }, 201, cors);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error interno";
-    return json({ error: message }, 500, cors);
+    console.error("signup failed", error);
+    return json({ error: "No se pudo crear la cuenta." }, 500, cors);
   }
 }
 
@@ -493,20 +612,35 @@ async function handleAvatarUpload(
       return json({ error: "Sesión inválida" }, 401, cors);
     }
 
+    // Rechazamos antes de bufferizar: formData() materializa el cuerpo entero
+    // en memoria y el límite de 5 MB se chequeaba demasiado tarde.
+    const declared = Number(request.headers.get("Content-Length") ?? "0");
+    if (Number.isFinite(declared) && declared > MAX_UPLOAD_BYTES) {
+      return json({ error: "El avatar supera los 5 MB" }, 413, cors);
+    }
+
     const form = await request.formData();
     const memberId = String(form.get("memberId") ?? "");
     const file = form.get("file");
-    if (!memberId || !(file instanceof File)) {
+    if (!MEMBER_ID_PATTERN.test(memberId) || !(file instanceof File)) {
       return json({ error: "Faltan memberId o file" }, 400, cors);
     }
-    if (!file.type.startsWith("image/")) {
-      return json({ error: "El avatar debe ser una imagen" }, 415, cors);
+    if (!ALLOWED_AVATAR_TYPES.has(file.type)) {
+      return json(
+        { error: "El avatar tiene que ser PNG, JPG o WebP." },
+        415,
+        cors,
+      );
     }
     if (file.size > MAX_AVATAR_BYTES) {
       return json({ error: "El avatar supera los 5 MB" }, 413, cors);
     }
 
-    if (caller.role === "operario") {
+    // Allowlist explícito: un token sin rol no debe saltear el control de
+    // propiedad (antes, `role === "operario"` dejaba pasar el caso "").
+    const canManageOthers =
+      caller.role === "admin" || caller.role === "responsable";
+    if (!canManageOthers) {
       const accessToken = await serviceAccountToken(env);
       const member = await getMember(env, accessToken, memberId);
       if (!member || member.uid !== caller.uid) {
@@ -536,8 +670,8 @@ async function handleAvatarUpload(
       cors,
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error interno";
-    return json({ error: message }, 500, cors);
+    console.error("avatar upload failed", error);
+    return json({ error: "No se pudo subir el avatar." }, 500, cors);
   }
 }
 
@@ -554,7 +688,18 @@ async function handleAvatarRead(
     return new Response("Not found", { status: 404 });
   }
   const headers = new Headers();
-  object.writeHttpMetadata(headers);
+  // El content-type guardado no se copia a ciegas: solo se sirven tipos
+  // raster de la allowlist y siempre con nosniff + CSP sandbox.
+  const storedType = object.httpMetadata?.contentType ?? "";
+  headers.set(
+    "Content-Type",
+    ALLOWED_AVATAR_TYPES.has(storedType)
+      ? storedType
+      : "application/octet-stream",
+  );
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("Content-Security-Policy", "default-src 'none'; sandbox");
+  headers.set("Content-Disposition", 'inline; filename="avatar"');
   headers.set("etag", object.httpEtag);
   headers.set("Cache-Control", "public, max-age=31536000, immutable");
   return new Response(request.method === "HEAD" ? null : object.body, {

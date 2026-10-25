@@ -64,6 +64,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setMember(null);
       return;
     }
+    try {
+      // Las reglas exigen el claim `role`. Si el token cacheado todavía no lo
+      // tiene (rol recién sincronizado o sesión vieja), forzamos un refresh
+      // antes de leer: si no, el usuario vería "no figura como miembro".
+      const token = await current.getIdTokenResult();
+      if (!token.claims.role) {
+        await current.getIdToken(true);
+      }
+    } catch {
+      // Si el refresh falla, la lectura de members va a fallar igual.
+    }
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         setMember(await findMemberByEmail(current.email));
@@ -111,7 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = useCallback(
-    async (name: string, email: string, password: string) => {
+    async (
+      name: string,
+      email: string,
+      password: string,
+      bootstrapToken?: string,
+    ) => {
       setError(null);
       setLoading(true);
       try {
@@ -120,13 +136,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response = await fetch(`${base}/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password }),
+          body: JSON.stringify({ name, email, password, bootstrapToken }),
         });
         const data = (await response.json().catch(() => ({}))) as {
           error?: string;
+          code?: string;
         };
         if (!response.ok) {
-          throw new Error(data.error ?? "No se pudo crear la cuenta.");
+          // `apiCode` y no `code`: el catch de abajo usa "code" in error para
+          // decidir si el mensaje viene de Firebase o de nuestra API.
+          const failure = new Error(
+            data.error ?? "No se pudo crear la cuenta.",
+          ) as Error & { apiCode?: string };
+          failure.apiCode = data.code;
+          throw failure;
         }
         await signInWithEmailAndPassword(
           firebaseAuthClient(),

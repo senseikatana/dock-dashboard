@@ -2,6 +2,14 @@ import { firebaseAuthClient } from "./firebaseClient";
 
 export const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
+// Espeja la allowlist del Worker: SVG es un documento ejecutable, no una
+// imagen, y se sirve desde el mismo origen que la app.
+export const ALLOWED_AVATAR_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+] as const;
+
 function apiBase(): string {
   return (
     import.meta.env.VITE_AVATAR_API_URL ??
@@ -14,8 +22,8 @@ export async function uploadAvatar(
   memberId: string,
   file: File,
 ): Promise<string> {
-  if (!file.type.startsWith("image/")) {
-    throw new Error("El avatar tiene que ser una imagen.");
+  if (!(ALLOWED_AVATAR_TYPES as readonly string[]).includes(file.type)) {
+    throw new Error("El avatar tiene que ser PNG, JPG o WebP.");
   }
   if (file.size > MAX_AVATAR_BYTES) {
     throw new Error("El avatar no puede superar los 5 MB.");

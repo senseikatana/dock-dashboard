@@ -24,6 +24,6 @@
   "vars": {
     "FIREBASE_PROJECT_ID": "panel-ola",
     "FIREBASE_API_KEY": "AIzaSyD0SeV0GDoYLRKXBy70Bd0Vi-KmO51kqJw",
-    "ALLOWED_ORIGINS": "https://samuraicoder.dev,https://dock-dashboard-6wu.pages.dev,http://localhost:5173",
+    "ALLOWED_ORIGINS": "https://samuraicoder.dev,https://dock-dashboard-6wu.pages.dev",
   },
 }

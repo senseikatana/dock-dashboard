@@ -1,25 +1,31 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // El claim `role` lo emite únicamente el Admin SDK (scripts/ y el Worker
+    // con la service account). Un token recién creado con accounts:signUp no
+    // lo tiene, así que nunca cuenta como miembro del panel.
     function role() {
-      return request.auth.token.role;
+      return request.auth != null
+        ? request.auth.token.get('role', '')
+        : '';
     }
 
-    function signedIn() {
-      return request.auth != null;
+    // Ser "autenticado" no alcanza: hay que estar provisionado con rol.
+    function provisioned() {
+      return role() in ['admin', 'responsable', 'operario'];
     }
 
     function memberUid(memberId) {
       return get(/databases/$(database)/documents/members/$(memberId)).data.uid;
     }
 
-    // Miembros: cualquier autenticado puede leer. Admin edita todo;
+    // Miembros: solo provisionados leen. Admin edita todo;
     // cada usuario puede editar solo su nombre, avatar y email.
     match /members/{memberId} {
-      allow read: if signedIn();
+      allow read: if provisioned();
       allow create, delete: if role() == 'admin';
       allow update: if role() == 'admin'
-        || (signedIn()
+        || (provisioned()
           && resource.data.uid == request.auth.uid
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['name', 'avatarUrl', 'email']));
@@ -27,45 +33,45 @@ service cloud.firestore {
 
     // Recepción e incidencias: los tres roles operan.
     match /albaranes/{noteId} {
-      allow read: if signedIn();
+      allow read: if provisioned();
       allow write: if role() in ['admin', 'responsable', 'operario'];
     }
 
     match /shrinkageEvents/{eventId} {
-      allow read: if signedIn();
+      allow read: if provisioned();
       allow write: if role() in ['admin', 'responsable', 'operario'];
     }
 
     // Maquinaria, residuos y gastos: solo admin y responsable.
     match /machines/{machineId} {
-      allow read: if signedIn();
+      allow read: if provisioned();
       allow write: if role() in ['admin', 'responsable'];
     }
 
     match /wasteRecords/{recordId} {
-      allow read: if signedIn();
+      allow read: if provisioned();
       allow write: if role() in ['admin', 'responsable'];
     }
 
     match /expenses/{expenseId} {
-      allow read: if signedIn();
+      allow read: if provisioned();
       allow write: if role() in ['admin', 'responsable'];
     }
 
     // Fichajes: cada usuario ve y gestiona los suyos; admin ve todos.
     match /timeEntries/{entryId} {
-      allow read: if signedIn()
+      allow read: if provisioned()
         && (role() == 'admin' || memberUid(resource.data.memberId) == request.auth.uid);
-      allow create: if signedIn()
+      allow create: if provisioned()
         && (role() == 'admin'
           || memberUid(request.resource.data.memberId) == request.auth.uid);
-      allow update, delete: if signedIn()
+      allow update, delete: if provisioned()
         && (role() == 'admin' || memberUid(resource.data.memberId) == request.auth.uid);
     }
 
     // Nóminas: cada usuario ve las suyas; solo admin escribe.
     match /payslips/{payslipId} {
-      allow read: if signedIn()
+      allow read: if provisioned()
         && (role() == 'admin' || memberUid(resource.data.memberId) == request.auth.uid);
       allow write: if role() == 'admin';
     }

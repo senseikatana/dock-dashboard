@@ -10,6 +10,9 @@ export function SignIn() {
   const [mode, setMode] = useState<Mode>("signin");
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  // El panel virgen pide un código de instalación para el primer admin.
+  const [needsBootstrap, setNeedsBootstrap] = useState(false);
+  const [bootstrapToken, setBootstrapToken] = useState("");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,9 +38,19 @@ export function SignIn() {
       }
       setSubmitting(true);
       try {
-        await signUp(name, email, password);
-      } catch {
-        // El mensaje se muestra desde el contexto de auth.
+        await signUp(name, email, password, bootstrapToken.trim() || undefined);
+      } catch (signUpError) {
+        // El mensaje se muestra desde el contexto de auth; el código
+        // determina si hay que pedir el código de instalación.
+        const apiCode =
+          signUpError &&
+          typeof signUpError === "object" &&
+          "apiCode" in signUpError
+            ? String((signUpError as { apiCode?: unknown }).apiCode ?? "")
+            : "";
+        if (apiCode === "bootstrap_required") {
+          setNeedsBootstrap(true);
+        }
       } finally {
         setSubmitting(false);
       }
@@ -86,7 +99,7 @@ export function SignIn() {
         <p className="sub">
           {mode === "signin"
             ? "Iniciá sesión con tu cuenta de empresa para ver el turno."
-            : "Registrate con tu email. El alta crea un usuario operario; si el panel está vacío, el primero queda como admin."}
+            : "Registrate con tu email. El alta crea un usuario operario. En un panel vacío se pide el código de instalación y la primera cuenta queda como admin."}
         </p>
 
         <form key={mode} className="signin-form" onSubmit={handleSubmit}>
@@ -139,6 +152,21 @@ export function SignIn() {
                 minLength={6}
                 required
                 placeholder="••••••••"
+              />
+            </label>
+          ) : null}
+
+          {mode === "signup" && needsBootstrap ? (
+            <label>
+              Código de instalación
+              <input
+                name="bootstrapToken"
+                autoComplete="one-time-code"
+                spellCheck={false}
+                value={bootstrapToken}
+                onChange={(event) => setBootstrapToken(event.target.value)}
+                placeholder="Código configurado en el Worker"
+                required
               />
             </label>
           ) : null}

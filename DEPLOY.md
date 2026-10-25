@@ -34,9 +34,9 @@ Auth providers are declared in `firebase.json` and deployed with `firebase deplo
 wrangler r2 bucket create dock-dashboard-avatars
 ```
 
-The Worker binds it as `AVATARS`. Uploads are limited to 5 MB and `image/*`.
+The Worker binds it as `AVATARS`. Uploads are limited to 5 MB and PNG/JPG/WebP; SVG is rejected because it is served from the app origin and can execute.
 
-## 3. Worker secret (Auth provisioning)
+## 3. Worker secrets (Auth provisioning)
 
 Create a dedicated service account with `roles/firebaseauth.admin` + `roles/datastore.user`, download its JSON key, and store it as a Worker secret:
 
@@ -45,6 +45,17 @@ wrangler secret put FIREBASE_SERVICE_ACCOUNT \
   --config workers/dock-dashboard/wrangler.jsonc < /path/to/key.json
 rm /path/to/key.json
 ```
+
+Also set the install code, required to create the first admin on an empty panel:
+
+```bash
+openssl rand -hex 32
+wrangler secret put BOOTSTRAP_TOKEN --config workers/dock-dashboard/wrangler.jsonc
+```
+
+On a panel with no members, `POST /api/signup` returns `403 bootstrap_required` until the code is supplied (the login screen reveals the field). The winning slot is recorded atomically in `config/bootstrap`; the first signup with the code becomes `admin`, everyone else is `operario`.
+
+If the panel ever ends up with zero members and `config/bootstrap` already exists, delete that document and repeat the first signup with the code.
 
 The public Firebase web config lives in `.env`; the service account key must never be committed.
 
