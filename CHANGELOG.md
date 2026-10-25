@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.2] - 2026-10-25
+
+Highlights: feat: updates content, routes, and theme for the dashboard (Cuadro de mando and fix(auth): gate reads on the role claim and close the signup race.
+
+- 🐛 fix(auth): gate reads on the role claim and close the signup race `9af4467`
+  - `AGENTS.md`
+  - `DEPLOY.md`
+  - `firestore.rules`
+  - `src/auth/AuthProvider.tsx`
+  - `src/auth/context.ts`
+  - `src/data/avatarStorage.ts`
+  - `src/screens/Account.tsx`
+  - `src/screens/SignIn.tsx`
+  - `workers/dock-dashboard/.dev.vars.example`
+  - `workers/dock-dashboard/src/index.ts`
+  - `workers/dock-dashboard/wrangler.jsonc`
+- 🚀 feat: updates content, routes, and theme for the dashboard (Cuadro de mando `779ef4f`
+  - `AGENTS.md`
+  - `bun.lock`
+  - `e2e/recepcion.spec.ts`
+  - `index.html`
+  - `package.json`
+  - `src/App.tsx`
+  - `src/auth/AuthProvider.tsx`
+  - `src/auth/context.ts`
+  - `src/components/Shell.tsx`
+  - `src/content/README.md`
+  - `src/content/dashboard.json`
+  - `src/content/site.json`
+  - `src/domain/format.ts`
+  - `src/screens/Account.tsx`
+  - `src/screens/Ajustes.tsx`
+  - `src/screens/CuadroDeMando.tsx`
+  - `src/screens/SignIn.tsx`
+  - `src/styles/app.css`
+  - `src/ui/theme.ts`
+  - `vite.config.ts`
+  - `workers/dock-dashboard/src/index.ts`
+- 🐛 fix: update AGENTS.md with revised design guidelines and sidebar account po `111896e`
+- 🚀 feat: update configuration files and implement Firebase Repository `b7d10c8`
+- 🚀 feat: implement Firebase migration plan with Firestore repository and add c `174664f`
+- 📦 build(bun.lock): add prepare, typecheck, @types/bun and vitest to package.json `9cd4f2c`
+
 ## [0.2.1] - 2026-10-24
 
 Highlights: fix: update AGENTS.md with revised design guidelines and sidebar account po.
