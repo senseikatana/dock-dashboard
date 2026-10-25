@@ -2,9 +2,9 @@
 // Uso interactivo:  bun scripts/purge-firestore.mjs
 // Uso en scripts/CI: bun scripts/purge-firestore.mjs --yes
 //
-// La purga es destructiva y destructiva contra el proyecto real que indique
-// VITE_FIREBASE_PROJECT_ID, así que en terminal interactiva pide confirmación
-// y en modo no interactivo exige el flag --yes explícito.
+// La purga borra datos del proyecto real que indique VITE_FIREBASE_PROJECT_ID,
+// así que en terminal interactiva pide confirmación y en modo no interactivo
+// exige el flag --yes explícito.
 
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
@@ -42,7 +42,10 @@ async function confirmAction(message) {
   if (FORCE) return true;
 
   if (!process.stdin.isTTY) {
-    console.error("❌ Purga cancelada: no hay terminal para confirmar.");
+    console.error("❌ Purga abortada: no hay terminal para confirmar.");
+    console.error(
+      "   Falta --yes (invocación automatizada, p. ej. e2e/global-setup.ts).",
+    );
     console.error(
       "   Ejecutá en una terminal interactiva, o añadí --yes si es automatizado.",
     );
@@ -55,9 +58,9 @@ async function confirmAction(message) {
   });
 
   try {
-    const answer = await rl.question(`${message} (y/N): `);
+    const answer = await rl.question(`${message} (yes/N): `);
     const normalized = answer.trim().toLowerCase();
-    return normalized === "y" || normalized === "sí" || normalized === "si";
+    return ["y", "yes", "s", "sí", "si"].includes(normalized);
   } finally {
     rl.close();
   }
