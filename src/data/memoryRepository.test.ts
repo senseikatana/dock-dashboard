@@ -129,4 +129,25 @@ describe("MemoryWarehouseRepository", () => {
     );
     expect(afterDelete.find((entry) => entry.id === "MI-99")).toBeUndefined();
   });
+
+  it("should delete a record that is already gone without failing (idempotent, like Firestore)", async () => {
+    // Arrange
+    const seed = buildSeed(TODAY);
+    const repository = new MemoryWarehouseRepository(seed);
+
+    // Act — Firestore `deleteDoc` succeeds for a missing document, so the
+    // in-memory adapter must too, or this suite describes something that
+    // production never does.
+    await expect(
+      repository.deleteExpense("EXP-0000-0000"),
+    ).resolves.toBeUndefined();
+    await expect(
+      repository.deleteNote("ALB-0000-0000"),
+    ).resolves.toBeUndefined();
+
+    // Assert — and nothing else was removed by mistake.
+    const shift = await repository.loadShift(TODAY);
+    expect(shift.expenses).toHaveLength(seed.expenses.length);
+    expect(shift.notes).toHaveLength(seed.notes.length);
+  });
 });

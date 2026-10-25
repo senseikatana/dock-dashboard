@@ -19,6 +19,14 @@ export interface ShiftData {
 /**
  * Seam between the panel and wherever the shift data lives.
  * Adapters: in-memory demo store today, Firebase/Firestore.
+ *
+ * Los dos adaptadores deben comportarse igual: los tests corren sobre
+ * memory, no sobre Firestore, así que cualquier divergencia hace que la
+ * suite describa algo que producción no hace.
+ *
+ * - `delete*` es idempotente: borrar un id que ya no existe resuelve sin
+ *   error, igual que `deleteDoc` de Firestore.
+ * - `update*` rechaza si el id no existe (Firestore `updateDoc` falla).
  */
 export interface WarehouseRepository {
   // Read

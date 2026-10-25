@@ -12,6 +12,17 @@ import { localDateIso } from "../domain/date";
 import type { ShiftData, WarehouseRepository } from "./repository";
 import type { SeedData } from "./seed";
 
+/**
+ * Borrado idempotente, igual que `deleteDoc` de Firestore: no falla si el
+ * registro ya no existe (otro usuario puede haberlo borrado antes). Los dos
+ * adaptadores deben comportarse igual, o un test en memory no describiría lo
+ * que hace producción.
+ */
+function removeById<T extends { id: string }>(items: T[], id: string): void {
+  const index = items.findIndex((item) => item.id === id);
+  if (index !== -1) items.splice(index, 1);
+}
+
 export class MemoryWarehouseRepository implements WarehouseRepository {
   private readonly data: SeedData;
 
@@ -72,9 +83,7 @@ export class MemoryWarehouseRepository implements WarehouseRepository {
   }
 
   async deleteNote(noteId: string): Promise<void> {
-    const index = this.data.notes.findIndex((entry) => entry.id === noteId);
-    if (index === -1) throw new Error(`Unknown delivery note ${noteId}`);
-    this.data.notes.splice(index, 1);
+    removeById(this.data.notes, noteId);
   }
 
   async addShrinkageEvent(event: ShrinkageEvent): Promise<void> {
@@ -93,11 +102,7 @@ export class MemoryWarehouseRepository implements WarehouseRepository {
   }
 
   async deleteShrinkageEvent(eventId: string): Promise<void> {
-    const index = this.data.shrinkageEvents.findIndex(
-      (entry) => entry.id === eventId,
-    );
-    if (index === -1) throw new Error(`Unknown shrinkage event ${eventId}`);
-    this.data.shrinkageEvents.splice(index, 1);
+    removeById(this.data.shrinkageEvents, eventId);
   }
 
   async addMachine(machine: Machine): Promise<void> {
@@ -114,11 +119,7 @@ export class MemoryWarehouseRepository implements WarehouseRepository {
   }
 
   async deleteMachine(machineId: string): Promise<void> {
-    const index = this.data.machines.findIndex(
-      (entry) => entry.id === machineId,
-    );
-    if (index === -1) throw new Error(`Unknown machine ${machineId}`);
-    this.data.machines.splice(index, 1);
+    removeById(this.data.machines, machineId);
   }
 
   async addWasteRecord(record: WasteRecord): Promise<void> {
@@ -137,11 +138,7 @@ export class MemoryWarehouseRepository implements WarehouseRepository {
   }
 
   async deleteWasteRecord(recordId: string): Promise<void> {
-    const index = this.data.wasteRecords.findIndex(
-      (entry) => entry.id === recordId,
-    );
-    if (index === -1) throw new Error(`Unknown waste record ${recordId}`);
-    this.data.wasteRecords.splice(index, 1);
+    removeById(this.data.wasteRecords, recordId);
   }
 
   async addExpense(expense: Expense): Promise<void> {
@@ -158,11 +155,7 @@ export class MemoryWarehouseRepository implements WarehouseRepository {
   }
 
   async deleteExpense(expenseId: string): Promise<void> {
-    const index = this.data.expenses.findIndex(
-      (entry) => entry.id === expenseId,
-    );
-    if (index === -1) throw new Error(`Unknown expense ${expenseId}`);
-    this.data.expenses.splice(index, 1);
+    removeById(this.data.expenses, expenseId);
   }
 
   async loadMembers(): Promise<Member[]> {
@@ -180,9 +173,7 @@ export class MemoryWarehouseRepository implements WarehouseRepository {
   }
 
   async deleteMember(memberId: string): Promise<void> {
-    const index = this.data.members.findIndex((entry) => entry.id === memberId);
-    if (index === -1) throw new Error(`Unknown member ${memberId}`);
-    this.data.members.splice(index, 1);
+    removeById(this.data.members, memberId);
   }
 
   async loadTimeEntries(memberId: string): Promise<TimeEntry[]> {
@@ -231,11 +222,7 @@ export class MemoryWarehouseRepository implements WarehouseRepository {
   }
 
   async deletePayslip(payslipId: string): Promise<void> {
-    const index = this.data.payslips.findIndex(
-      (entry) => entry.id === payslipId,
-    );
-    if (index === -1) throw new Error(`Unknown payslip ${payslipId}`);
-    this.data.payslips.splice(index, 1);
+    removeById(this.data.payslips, payslipId);
   }
 
   async purgeSeed(): Promise<void> {
