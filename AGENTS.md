@@ -33,26 +33,35 @@ Order before commit: `bun run lint` → `bun check` → `bun run test`.
 - CRUD is wired on every screen: Recepcion (albaranes), Incidencias (mermas), Maquinaria, Residuos, Gastos, Ajustes (miembros + nóminas), and the personal panel (`/me`, `/timesheet`, `/payslips`, `/account`). Dashboard has a purge button only; restore demo data with `bun run seed` (no restore button by design).
 - Member settings live in `src/screens/Ajustes.tsx` + `src/domain/members.ts` (roles: admin/responsable/operario; departments; activo/inactivo). Payslip admin lives in `src/components/PayslipsAdmin.tsx`. Do NOT introduce Keystatic: it is a Git-based content CMS, not a runtime admin for Firestore records.
 - Auth: Firebase Auth email/password (`firebase.json` → `auth.providers.emailPassword`, deployed with `firebase deploy --only auth`). `AuthProvider` resolves the Firestore member by email; routes are guarded by `src/auth/access.ts`.
-- Role access: `admin` → all routes incl. `/settings`; `responsable` → all except settings; `operario` → personal routes + `/reception` + `/incidents`.
+- Signup: the login screen has “Crear cuenta”. It calls the Worker `POST /api/signup`, which creates the Auth user + Firestore member + role claim. If the `members` collection is empty, the first signup becomes `admin`; otherwise it is `operario`. No demo credentials are required.
+- Role access: `admin` → all routes incl. `/settings`; `responsable` → all except settings; `operario` → personal routes + `/reception` + `/incidents`. `/` redirects to `/dashboard` for admin/responsable and `/me` for operario.
 - Firestore rules enforce roles via the `role` custom claim. Each user can update only their own `name`, `avatarUrl` and `email`; admin edits everything. Fichajes and nóminas are scoped to the member.
 - After changing a member role, run `bun run auth:sync-roles` (and the user must re-login/refresh token) so the claim matches.
-- New member flow: create the member in `/settings`, then `bun run auth:users` (creates the Auth account for any member without `uid`) and `bun run auth:sync-roles`.
+- New member flow: signup, or create in `/settings` then `bun run auth:users` + `bun run auth:sync-roles`.
 - Routes are English: `/me`, `/timesheet`, `/payslips`, `/account`, `/reception`, `/dashboard`, `/incidents`, `/machinery`, `/waste`, `/expenses`, `/settings`. Spanish legacy paths redirect (`/nominas`, `/fichaje`, `/ajustes`, etc.).
+- Content layer: `src/content/site.json` (brand/scope/title) and `src/content/dashboard.json` (dashboard/KPI/chart labels). `src/content/README.md` explains what is reusable vs domain-specific. Change content there before touching components.
 - Demo-data lifecycle lives in the repository: `purgeSeed()` wipes the seven operational collections (albaranes, shrinkage, machines, waste, expenses, timeEntries, payslips) and preserves `members` so nobody loses access; `resetSeed(today)` rebuilds operational data from `buildSeed(today)`.
 - Confirmations and success messages use SweetAlert2 via `src/ui/dialogs.ts` (`confirmDestructive`, `toastSuccess`). Do not use native `alert`/`confirm`.
 
 ## UI / Design Contract
 
-`DESIGN.md` is the source of truth. Non-negotiables:
+`DESIGN.md` is the source of truth for the core app. Non-negotiables:
 
-- One chroma only (Signal Orange); no shadows/glows/gradients. The sidebar account popover is the one exception: soft shadow + icons, Nuxt UI-style.
-- Radius by rank: sheet 16 → card 8 → control 6 → chip 4; the account popover uses 2px to match the Nuxt UI reference.
+- One chroma only (Signal Orange); no shadows/glows/gradients. The sidebar account popover is the one exception: soft shadow + icons, HyperUI-style.
+- Radius by rank: sheet 16 → card 8 → control 6 → chip 4; the account popover uses 8px.
 - Figures in Barlow Condensed with tabular nums; prose in Archivo.
 - Status = rubber stamp (verdict) or same-hue tinted pill (state).
 - One primary action per screen; loading/empty = dashed slot with words.
-- Navigation lives in the sidebar account dropdown (Personal / Operaciones / Administración), not as separate rail links. Mobile keeps a bottom nav with the four personal routes.
+- Navigation lives in the sidebar account dropdown, grouped in collapsible `<details>` sections (Personal / Operaciones / Administración), not as separate rail links. The rail starts collapsed; the dashboard stats are the default view for admin/responsable. Mobile keeps a bottom nav with the four personal routes.
 - Theme selector: light / dark / system, persisted in `localStorage` (`dock:theme`), applied via `data-theme` on `<html>`; dark tokens live in `tokens.css`. Do not change the orange/cement identity when touching themes.
 - UI copy is Spanish (es-ES).
+
+### Dashboard (Cuadro de mando)
+
+- Built from the HyperUI analytics template: Tailwind v4 utilities + Chart.js, integrated into the existing Shell (do not duplicate the sidebar).
+- Tailwind is loaded via `@tailwindcss/vite`; `app.css` imports only `tailwindcss/theme.css` + `tailwindcss/utilities.css` (no preflight) so the bespoke CSS is not reset.
+- Charts: line/bar equivalent for "Albaranes por muelle", donut for "Albaranes por estado", sparkline in the first KPI. Chart.js canvases need `role="img"` + `aria-label`.
+- Keep the dashboard data derived from Firestore rows; do not hardcode totals.
 
 ## Firebase / Cloudflare Deploy
 
@@ -72,6 +81,7 @@ firebase deploy --only auth
 - **DNS requirement:** `samuraicoder.dev` needs a proxied record (A/CNAME/AAAA) pointing to the origin. The Worker route is already attached; without the root record it cannot resolve. If the main site is not live yet, a proxied placeholder `AAAA 100::` works temporarily, but the rest of the domain will not serve content.
 - Worker URL for direct/preview access: `https://dock-dashboard.senseikatanacom.workers.dev`.
 - **Worker** `dock-dashboard` (`workers/dock-dashboard`) serves the subpath `samuraicoder.dev/apps/dock-dashboard/*` and the API:
+  - `POST /apps/dock-dashboard/api/signup` → public signup; creates Auth user + member (first member = admin, then operario).
   - `POST /apps/dock-dashboard/api/members` → creates Firebase Auth user + role claim (admin only).
   - `POST /apps/dock-dashboard/api/avatars` → upload to R2 (max 5 MB, images only).
   - `GET /apps/dock-dashboard/api/avatars/{key}` → serves the R2 object.

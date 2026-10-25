@@ -316,7 +316,15 @@ export function Ajustes({ repository }: { repository: WarehouseRepository }) {
 
 function Avatar({ member }: { member: Member }) {
   if (member.avatarUrl) {
-    return <img className="avatar" src={member.avatarUrl} alt="" />;
+    return (
+      <img
+        className="avatar"
+        src={member.avatarUrl}
+        alt=""
+        width={28}
+        height={28}
+      />
+    );
   }
   const initials = member.name
     .split(" ")
@@ -383,6 +391,8 @@ function MemberForm({
             name="email"
             type="email"
             required
+            autoComplete="off"
+            spellCheck={false}
             defaultValue={initial?.email ?? ""}
             placeholder="sergio@empresa.es"
           />

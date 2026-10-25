@@ -1,23 +1,60 @@
 import { useState } from "react";
 
 import { useAuth } from "../auth/useAuth";
+import site from "../content/site.json";
+
+type Mode = "signin" | "signup";
 
 export function SignIn() {
-  const { signIn, error, loading } = useAuth();
+  const { signIn, signUp, error, loading } = useAuth();
+  const [mode, setMode] = useState<Mode>("signin");
   const [submitting, setSubmitting] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setLocalError(null);
     const form = new FormData(event.currentTarget);
+    const email = String(form.get("email"));
+    const password = String(form.get("password"));
+
+    if (mode === "signup") {
+      const name = String(form.get("name")).trim();
+      const repeat = String(form.get("repeat"));
+      if (name.length < 2) {
+        setLocalError("Indicá tu nombre completo.");
+        return;
+      }
+      if (password.length < 6) {
+        setLocalError("La contraseña debe tener al menos 6 caracteres.");
+        return;
+      }
+      if (password !== repeat) {
+        setLocalError("Las contraseñas no coinciden.");
+        return;
+      }
+      setSubmitting(true);
+      try {
+        await signUp(name, email, password);
+      } catch {
+        // El mensaje se muestra desde el contexto de auth.
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await signIn(String(form.get("email")), String(form.get("password")));
+      await signIn(email, password);
     } catch {
       // El mensaje se muestra desde el contexto de auth.
     } finally {
       setSubmitting(false);
     }
   }
+
+  const message = localError ?? error;
 
   return (
     <div className="signin">
@@ -40,46 +77,105 @@ export function SignIn() {
             />
           </svg>
           <div>
-            <div className="brand-name">Dock Dashboard</div>
-            <div className="brand-scope">Recepción y operaciones · Nave 3</div>
+            <div className="brand-name">{site.brand}</div>
+            <div className="brand-scope">{site.scope}</div>
           </div>
         </div>
 
-        <h1>Acceso al panel</h1>
+        <h1>{mode === "signin" ? "Acceso al panel" : "Crear cuenta"}</h1>
         <p className="sub">
-          Iniciá sesión con tu cuenta de empresa para ver el turno.
+          {mode === "signin"
+            ? "Iniciá sesión con tu cuenta de empresa para ver el turno."
+            : "Registrate con tu email. El alta crea un usuario operario; si el panel está vacío, el primero queda como admin."}
         </p>
 
-        <form className="signin-form" onSubmit={handleSubmit}>
+        <form key={mode} className="signin-form" onSubmit={handleSubmit}>
+          {mode === "signup" ? (
+            <label>
+              Nombre completo
+              <input
+                name="name"
+                autoComplete="name"
+                required
+                spellCheck={false}
+                placeholder="Sergio Álvarez"
+              />
+            </label>
+          ) : null}
+
           <label>
             Email
             <input
               name="email"
               type="email"
               autoComplete="email"
+              spellCheck={false}
               required
               placeholder="nombre@empresa.es"
             />
           </label>
+
           <label>
             Contraseña
             <input
               name="password"
               type="password"
-              autoComplete="current-password"
+              autoComplete={
+                mode === "signin" ? "current-password" : "new-password"
+              }
+              minLength={6}
               required
               placeholder="••••••••"
             />
           </label>
-          {error ? <div className="signin-error">{error}</div> : null}
+
+          {mode === "signup" ? (
+            <label>
+              Repetir contraseña
+              <input
+                name="repeat"
+                type="password"
+                autoComplete="new-password"
+                minLength={6}
+                required
+                placeholder="••••••••"
+              />
+            </label>
+          ) : null}
+
+          {message ? (
+            <div className="signin-error" role="alert" aria-live="polite">
+              {message}
+            </div>
+          ) : null}
+
           <button
             type="submit"
             className="btn btn-primary"
             disabled={submitting || loading}
           >
-            {submitting ? "Entrando…" : "Entrar"}
+            {submitting
+              ? mode === "signin"
+                ? "Entrando…"
+                : "Creando cuenta…"
+              : mode === "signin"
+                ? "Entrar"
+                : "Crear cuenta"}
           </button>
         </form>
+
+        <button
+          type="button"
+          className="signin-switch"
+          onClick={() => {
+            setMode((current) => (current === "signin" ? "signup" : "signin"));
+            setLocalError(null);
+          }}
+        >
+          {mode === "signin"
+            ? "¿No tenés cuenta? Crear cuenta"
+            : "¿Ya tenés cuenta? Iniciar sesión"}
+        </button>
 
         <p className="signin-hint">
           Los roles se asignan en Ajustes → Miembros. Si tu cuenta no figura

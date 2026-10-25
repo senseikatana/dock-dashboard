@@ -28,6 +28,7 @@ interface MemberRecord {
 
 const PREFIX = "/apps/dock-dashboard";
 const API_MEMBERS = `${PREFIX}/api/members`;
+const API_SIGNUP = `${PREFIX}/api/signup`;
 const API_AVATARS = `${PREFIX}/api/avatars`;
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
@@ -200,7 +201,8 @@ async function patchMember(
 async function createAuthUser(
   env: Env,
   accessToken: string,
-  body: ProvisionBody,
+  email: string,
+  name: string,
   password: string,
 ): Promise<string> {
   const response = await fetch(
@@ -212,9 +214,9 @@ async function createAuthUser(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: body.email.toLowerCase(),
+        email: email.toLowerCase(),
         password,
-        displayName: body.name,
+        displayName: name,
         emailVerified: false,
       }),
     },
@@ -303,7 +305,13 @@ async function handleProvision(request: Request, env: Env): Promise<Response> {
     }
 
     const password = generatePassword();
-    const uid = await createAuthUser(env, accessToken, body, password);
+    const uid = await createAuthUser(
+      env,
+      accessToken,
+      body.email,
+      body.name,
+      password,
+    );
     await setRoleClaim(env, accessToken, uid, body.role);
     await patchMember(env, accessToken, body.memberId, { uid });
 
@@ -313,6 +321,156 @@ async function handleProvision(request: Request, env: Env): Promise<Response> {
     if (message === "EMAIL_EXISTS") {
       return json({ error: "Ya existe una cuenta con ese email" }, 409, cors);
     }
+    return json({ error: message }, 500, cors);
+  }
+}
+
+async function findMemberByEmail(
+  env: Env,
+  accessToken: string,
+  email: string,
+): Promise<boolean> {
+  const response = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents:runQuery`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: "members" }],
+          where: {
+            fieldFilter: {
+              field: { fieldPath: "email" },
+              op: "EQUAL",
+              value: { stringValue: email.toLowerCase() },
+            },
+          },
+          limit: 1,
+        },
+      }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error("No se pudo verificar el email");
+  }
+  const rows = (await response.json()) as Array<{ document?: unknown }>;
+  return rows.some((row) => Boolean(row.document));
+}
+
+async function createMemberDoc(
+  env: Env,
+  accessToken: string,
+  uid: string,
+  name: string,
+  email: string,
+  role: string,
+): Promise<void> {
+  const response = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/members/${encodeURIComponent(uid)}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fields: {
+          id: { stringValue: `USR-${uid.slice(0, 6).toUpperCase()}` },
+          name: { stringValue: name },
+          email: { stringValue: email.toLowerCase() },
+          role: { stringValue: role },
+          department: { stringValue: "almacen" },
+          status: { stringValue: "activo" },
+          uid: { stringValue: uid },
+        },
+      }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error("No se pudo crear el perfil del miembro");
+  }
+}
+
+async function hasAnyMember(env: Env, accessToken: string): Promise<boolean> {
+  const response = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/members?pageSize=1`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!response.ok) {
+    throw new Error("No se pudo verificar el estado del panel");
+  }
+  const data = (await response.json()) as { documents?: unknown[] };
+  return (data.documents?.length ?? 0) > 0;
+}
+
+async function handleSignup(request: Request, env: Env): Promise<Response> {
+  const cors = corsHeaders(request, env);
+  if (request.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: cors });
+  }
+  if (request.method !== "POST") {
+    return json({ error: "Método no permitido" }, 405, cors);
+  }
+
+  try {
+    const body = (await request.json()) as {
+      name?: string;
+      email?: string;
+      password?: string;
+    };
+    const name = body.name?.trim() ?? "";
+    const email = body.email?.trim().toLowerCase() ?? "";
+    const password = body.password ?? "";
+
+    if (name.length < 2) {
+      return json({ error: "Indicá tu nombre completo." }, 400, cors);
+    }
+    if (!email.includes("@") || email.length < 5) {
+      return json({ error: "El email no es válido." }, 400, cors);
+    }
+    if (password.length < 6) {
+      return json(
+        { error: "La contraseña debe tener al menos 6 caracteres." },
+        400,
+        cors,
+      );
+    }
+
+    const accessToken = await serviceAccountToken(env);
+
+    if (await findMemberByEmail(env, accessToken, email)) {
+      return json(
+        { error: "Ese email ya está registrado. Iniciá sesión." },
+        409,
+        cors,
+      );
+    }
+
+    const role = (await hasAnyMember(env, accessToken)) ? "operario" : "admin";
+
+    let uid: string;
+    try {
+      uid = await createAuthUser(env, accessToken, email, name, password);
+    } catch (error) {
+      if (error instanceof Error && error.message === "EMAIL_EXISTS") {
+        return json(
+          { error: "Ese email ya está registrado. Iniciá sesión." },
+          409,
+          cors,
+        );
+      }
+      throw error;
+    }
+
+    await setRoleClaim(env, accessToken, uid, role);
+    await createMemberDoc(env, accessToken, uid, name, email, role);
+
+    return json({ uid, email, role }, 201, cors);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Error interno";
     return json({ error: message }, 500, cors);
   }
 }
@@ -410,6 +568,10 @@ export default {
 
     if (url.pathname === API_MEMBERS) {
       return handleProvision(request, env);
+    }
+
+    if (url.pathname === API_SIGNUP) {
+      return handleSignup(request, env);
     }
 
     if (url.pathname === API_AVATARS) {

@@ -127,8 +127,11 @@ test.describe("Settings access", () => {
     // Act
     await page.locator(".account-trigger").click();
     await page
+      .locator(".account-dropdown summary", { hasText: "Administración" })
+      .click();
+    await page
       .locator(".account-dropdown")
-      .getByRole("menuitem", { name: /Ajustes/ })
+      .getByRole("link", { name: /Ajustes/ })
       .click();
 
     // Assert
@@ -166,7 +169,7 @@ test.describe("Account menu", () => {
     // Assert
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect(
-      page.locator(".account-dropdown").getByRole("menuitem", {
+      page.locator(".account-dropdown").getByRole("button", {
         name: /Cerrar sesión/,
       }),
     ).toBeVisible();

@@ -17,6 +17,9 @@ export function applyTheme(theme: ThemeMode): () => void {
     const mode =
       theme === "system" ? (media.matches ? "dark" : "light") : theme;
     document.documentElement.dataset.theme = mode;
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", mode === "dark" ? "#1b1714" : "#e8e4dc");
     window.localStorage.setItem(STORAGE_KEY, theme);
   }
 

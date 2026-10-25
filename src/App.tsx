@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AuthProvider } from "./auth/AuthProvider";
@@ -8,7 +8,6 @@ import { Shell } from "./components/Shell";
 import { FirebaseWarehouseRepository } from "./data/firebaseRepository";
 import { Account } from "./screens/Account";
 import { Ajustes } from "./screens/Ajustes";
-import { CuadroDeMando } from "./screens/CuadroDeMando";
 import { Gastos } from "./screens/Gastos";
 import { Incidencias } from "./screens/Incidencias";
 import { Maquinaria } from "./screens/Maquinaria";
@@ -20,6 +19,12 @@ import { SignIn } from "./screens/SignIn";
 import { Timesheet } from "./screens/Timesheet";
 
 const today = new Date().toISOString().slice(0, 10);
+
+const LazyCuadroDeMando = lazy(() =>
+  import("./screens/CuadroDeMando").then((module) => ({
+    default: module.CuadroDeMando,
+  })),
+);
 
 export function App() {
   const repository = useMemo(() => new FirebaseWarehouseRepository(), []);
@@ -65,9 +70,21 @@ function AppContent({
   }
 
   return (
-    <Shell freshness="Datos del turno · Firestore">
+    <Shell
+      freshness="Datos del turno · Firestore"
+      repository={repository}
+      today={today}
+    >
       <Routes>
-        <Route path="/" element={<Navigate to="/me" replace />} />
+        <Route
+          path="/"
+          element={
+            <Navigate
+              to={canAccess(role, "dashboard") ? "/dashboard" : "/me"}
+              replace
+            />
+          }
+        />
         <Route path="/me" element={<MyPanel repository={repository} />} />
         <Route
           path="/timesheet"
@@ -86,7 +103,13 @@ function AppContent({
           path="/dashboard"
           element={
             canAccess(role, "dashboard") ? (
-              <CuadroDeMando repository={repository} today={today} />
+              <Suspense
+                fallback={
+                  <div className="empty-slot">Cargando cuadro de mando…</div>
+                }
+              >
+                <LazyCuadroDeMando repository={repository} today={today} />
+              </Suspense>
             ) : (
               <Navigate to="/me" replace />
             )

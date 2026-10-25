@@ -64,11 +64,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setMember(null);
       return;
     }
-    try {
-      setMember(await findMemberByEmail(current.email));
-    } catch {
-      setMember(null);
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        setMember(await findMemberByEmail(current.email));
+        return;
+      } catch {
+        if (attempt === 0) {
+          await new Promise((resolve) => window.setTimeout(resolve, 400));
+        }
+      }
     }
+    setMember(null);
   }, []);
 
   useEffect(() => {
@@ -104,6 +110,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const signUp = useCallback(
+    async (name: string, email: string, password: string) => {
+      setError(null);
+      setLoading(true);
+      try {
+        const base =
+          import.meta.env.VITE_AUTH_API_URL ?? "/apps/dock-dashboard/api";
+        const response = await fetch(`${base}/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
+        });
+        const data = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        if (!response.ok) {
+          throw new Error(data.error ?? "No se pudo crear la cuenta.");
+        }
+        await signInWithEmailAndPassword(
+          firebaseAuthClient(),
+          email.trim().toLowerCase(),
+          password,
+        );
+      } catch (signUpError) {
+        setError(
+          signUpError instanceof Error && !("code" in signUpError)
+            ? signUpError.message
+            : messageForError(signUpError),
+        );
+        throw signUpError;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
   const signOut = useCallback(async () => {
     await firebaseSignOut(firebaseAuthClient());
     setMember(null);
@@ -122,10 +165,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       signIn,
+      signUp,
       signOut,
       refreshMember,
     }),
-    [user, member, loading, error, signIn, signOut, refreshMember],
+    [user, member, loading, error, signIn, signUp, signOut, refreshMember],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

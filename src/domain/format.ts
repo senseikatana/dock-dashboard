@@ -37,3 +37,9 @@ export function formatSignedEur(value: number): string {
   }
   return `+${formatEur(value)}`;
 }
+
+export function formatLongDate(isoDate: string): string {
+  return new Intl.DateTimeFormat("es-ES", {
+    dateStyle: "long",
+  }).format(new Date(`${isoDate}T00:00:00`));
+}

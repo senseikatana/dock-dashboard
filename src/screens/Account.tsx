@@ -145,6 +145,8 @@ export function Account({ repository }: { repository: WarehouseRepository }) {
                   className="avatar avatar-lg"
                   src={member.avatarUrl}
                   alt=""
+                  width={56}
+                  height={56}
                 />
               ) : (
                 <span className="avatar avatar-lg avatar-fallback">
@@ -194,6 +196,8 @@ export function Account({ repository }: { repository: WarehouseRepository }) {
                 name="email"
                 type="email"
                 required
+                autoComplete="email"
+                spellCheck={false}
                 defaultValue={member.email}
               />
             </label>

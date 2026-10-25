@@ -1,0 +1,20 @@
+{
+  "title": "Cuadro de mando",
+  "subtitlePrefix": "Turno de hoy",
+  "subtitleSuffix": "movimiento completo del almacén.",
+  "kpis": {
+    "receptions": "Recepciones hoy",
+    "conformity": "Conformidad",
+    "shrinkage": "Mermas del mes",
+    "machinery": "Maquinaria operativa"
+  },
+  "charts": {
+    "docksTitle": "Albaranes por muelle",
+    "docksSubtitle": "Distribución del turno por punto de descarga.",
+    "statusTitle": "Albaranes por estado",
+    "statusSubtitle": "Conformes, pendientes y con incidencia."
+  },
+  "expensesTitle": "Gastos del día",
+  "expensesSubtitle": "Costes operativos registrados hoy.",
+  "recentTitle": "Últimos albaranes"
+}
