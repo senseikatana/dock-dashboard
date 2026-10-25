@@ -1,5 +1,10 @@
 // scripts/purge-firestore.mjs — Borra todos los datos del panel en Firestore
-// Uso: bun scripts/purge-firestore.mjs
+// Uso interactivo:  bun scripts/purge-firestore.mjs
+// Uso en scripts/CI: bun scripts/purge-firestore.mjs --yes
+//
+// La purga es destructiva y destructiva contra el proyecto real que indique
+// VITE_FIREBASE_PROJECT_ID, así que en terminal interactiva pide confirmación
+// y en modo no interactivo exige el flag --yes explícito.
 
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
@@ -9,6 +14,7 @@ import {
   getDocs,
   deleteDoc,
 } from "firebase/firestore";
+import { createInterface } from "node:readline/promises";
 
 const COLLECTIONS = [
   "albaranes",
@@ -20,6 +26,8 @@ const COLLECTIONS = [
   "payslips",
 ];
 
+const FORCE = process.argv.includes("--yes") || process.argv.includes("-y");
+
 if (getApps().length === 0) {
   initializeApp({
     apiKey: process.env.VITE_FIREBASE_API_KEY,
@@ -30,7 +38,50 @@ if (getApps().length === 0) {
 
 const db = getFirestore();
 
+async function confirmAction(message) {
+  if (FORCE) return true;
+
+  if (!process.stdin.isTTY) {
+    console.error("❌ Purga cancelada: no hay terminal para confirmar.");
+    console.error(
+      "   Ejecutá en una terminal interactiva, o añadí --yes si es automatizado.",
+    );
+    return false;
+  }
+
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  try {
+    const answer = await rl.question(`${message} (y/N): `);
+    const normalized = answer.trim().toLowerCase();
+    return normalized === "y" || normalized === "sí" || normalized === "si";
+  } finally {
+    rl.close();
+  }
+}
+
 async function purge() {
+  console.log(
+    "⚠️  ADVERTENCIA: esta acción elimina TODOS los datos operativos de Firestore",
+  );
+  console.log(
+    "   (albaranes, incidencias, máquinas, residuos, gastos, fichajes y nóminas).",
+  );
+  console.log(
+    "   Los miembros NO se borran, para no perder el acceso al panel.",
+  );
+
+  const confirmed = await confirmAction(
+    `¿Continuar con la purga de "${process.env.VITE_FIREBASE_PROJECT_ID}"?`,
+  );
+  if (!confirmed) {
+    console.log("Operación cancelada. Nada se ha borrado.");
+    process.exit(1);
+  }
+
   const auth = getAuth();
   await signInWithEmailAndPassword(
     auth,
