@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.3] - 2026-10-25
+
+Highlights: feat(auth): acceso con Google y GitHub, y ninguna contraseña en el repo and fix(workday): corregir tres bordes y cubrir el módulo con tests, plus 7 more changes.
+
+- 🚀 feat(auth): acceso con Google y GitHub, y ninguna contraseña en el repo `d2dc070`
+  - `AGENTS.md`
+  - `e2e/recepcion.spec.ts`
+  - `scripts/create-auth-users.mjs`
+  - `scripts/purge-firestore.mjs`
+  - `scripts/seed-firestore.mjs`
+  - `src/auth/AuthProvider.tsx`
+  - `src/auth/context.ts`
+  - `src/screens/SignIn.tsx`
+  - `src/styles/app.css`
+  - `workers/dock-dashboard/src/index.ts`
+- 🤖 ci: gate de calidad en cada push y limpia ignorePatterns obsoletos `f18098d`
+  - `.github/workflows/ci.yml`
+  - `.oxlintrc.json`
+- 🚀 feat(ui): avisos de error y confirmación en los borrados de las pantallas `c2cd0ba`
+  - `src/data/useShift.ts`
+  - `src/screens/CuadroDeMando.tsx`
+  - `src/screens/Gastos.tsx`
+  - `src/screens/Incidencias.tsx`
+  - `src/screens/Maquinaria.tsx`
+  - `src/screens/Recepcion.tsx`
+  - `src/screens/Residuos.tsx`
+  - `src/ui/dialogs.ts`
+- 🐛 fix(workday): corregir tres bordes y cubrir el módulo con tests `11e8539`
+  - `src/domain/workday.test.ts`
+  - `src/domain/workday.ts`
+- 📝 docs(data): la carga no es "del turno" y ahora lo dice `6c98525`
+  - `src/App.tsx`
+  - `src/data/repository.ts`
+- 🐛 fix(data): borrados idempotentes en el adaptador en memoria `6c0615b`
+  - `src/data/memoryRepository.test.ts`
+  - `src/data/memoryRepository.ts`
+  - `src/data/repository.ts`
+- 🐛 fix(dates): usar fecha civil local en lugar de UTC `f76084f`
+  - `scripts/seed-firestore.mjs`
+  - `src/App.tsx`
+  - `src/data/firebaseRepository.ts`
+  - `src/data/memoryRepository.ts`
+  - `src/domain/date.test.ts`
+  - `src/domain/date.ts`
+  - `src/screens/MyPanel.tsx`
+  - `src/screens/Recepcion.tsx`
+- 🐛 fix(scripts): confirmación antes de purgar Firestore `0b42628`
+  - `e2e/global-setup.ts`
+  - `scripts/purge-firestore.mjs`
+- 🚀 feat: improve interactive purge script to prompt for confirmation `31ad4bf`
+  - `scripts/purge-firestore.mjs`
+
 ## [0.2.2] - 2026-10-25
 
 Highlights: feat: updates content, routes, and theme for the dashboard (Cuadro de mando and fix(auth): gate reads on the role claim and close the signup race.
